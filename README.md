@@ -1,1 +1,1 @@
-# -cs739-p2-replicated-database
+# cs739-p2-replicated-database
