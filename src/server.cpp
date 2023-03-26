@@ -16,12 +16,6 @@ using grpcInterface::ReplicatedDB;
 static std::string serverDirectory;
 static std::unordered_map<std::string, int> serverclock;
 
-Status GRPC_Server::get(ServerContext* context, const Path* request, HelloReply* response) {
-  std::string prefix("Recieved path: ");
-  response->set_message(prefix + request->path());
-  return Status::OK;
-}
-
 void RunServer(std::string address) {
   GRPC_Server service;
 
@@ -61,4 +55,10 @@ int main(int argc, char** argv) {
   RunServer(address);
 
   return 0;
+}
+
+Status GRPC_Server::get(ServerContext* context, const Request* request, Response* response) {
+  std::string prefix("Recieved path: ");
+  response->set_message(prefix + request->path());
+  return Status::OK;
 }

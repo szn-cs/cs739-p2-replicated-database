@@ -9,7 +9,7 @@ GRPC_Client::GRPC_Client(std::shared_ptr<Channel> channel) : stub_(ReplicatedDB:
 std::string GRPC_Client::get(const std::string& path) {
   // Data we are sending to the server.
   Request request;
-  request.set_name(path);
+  request.set_path(path);
   // Container for the data we expect from the server.
   Response response;
   // Context for the client. It could be used to convey extra information to

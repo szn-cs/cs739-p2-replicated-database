@@ -25,7 +25,7 @@ using namespace grpcInterface;
 using grpcInterface::ReplicatedDB;
 
 // EXAMPLE API keep it to amke sure thigns are working
-using grpcInterface::HelloReply, grpcInterface::HelloRequest;
+using grpcInterface::Request, grpcInterface::Response;
 
 #define TIMEOUT 60 * 1000  // this is in ms
 #define CHUNK_SIZE 1572864

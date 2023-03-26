@@ -10,7 +10,7 @@ build() {
   ## move binaries from nested builds
   mkdir -p ./target/release
   # copy binaries
-  cp ./target/config/server ./target/release/server
+  cp ./target/config/src/server ./target/release/
 
   (source ./script/build.sh && test)
 }
@@ -21,4 +21,6 @@ test() {
 }
 
 ## clean
-# cmake --build ./target/config --target clean
+clean() {
+  cmake --build ./target/config --target clean
+}
