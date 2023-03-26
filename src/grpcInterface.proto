@@ -1,0 +1,27 @@
+syntax = "proto3"; // we use proto version 3
+package grpcInterface;   // similar to namespace, avoid conflicts
+
+
+
+/** ReplicatedDB servic */
+service ReplicatedDB {
+  
+  /* DB requests */
+  rpc get(Request) returns (Response) {};
+  rpc set(Request) returns (Response) {};
+
+  /* Paxos consensus */
+  rpc propose() returns (Response) {};
+  rpc accept() returns (Response) {};
+  
+}
+
+message Request {
+    string path = 1;
+}
+
+message Response {
+    int32 status = 1;
+}
+
+
