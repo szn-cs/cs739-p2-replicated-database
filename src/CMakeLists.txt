@@ -1,10 +1,21 @@
 cmake_minimum_required(VERSION 3.10.2)
 set(CMAKE_CXX_STANDARD 17)
 
-set(REPLICATEDDB_SRC 
-  ./grpcServer.cpp
-  ./grpcClient.cpp
+set(CLIENT_SRC 
+  client.cpp
+  grpcClient.cpp
 )
+set(CLIENT_BINARY_NAME 
+  client
+)
+
+set(SERVER_SRC 
+  grpcServer.cpp
+)
+set(SERVER_BINARY_NAME 
+  server
+)
+
 
 # Protobuf
 set(protobuf_MODULE_COMPATIBLE TRUE)
@@ -53,26 +64,26 @@ target_link_libraries(custom_hw_grpc_proto
 
 include(CheckFunctionExists)
 
-add_executable(${PROJECT_NAME} ${REPLICATEDDB_SRC}
+add_executable(${CLIENT_BINARY_NAME} ${CLIENT_SRC}
   ${hw_proto_srcs}
   ${hw_grpc_srcs})
   
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${CLIENT_BINARY_NAME}
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF}
   stdc++fs)
 
-  # target_link_libraries(${PROJECT_NAME} gRPC::gpr gRPC::grpc gRPC::grpc++ gRPC::grpc++_alts)
+  # target_link_libraries(${CLIENT_BINARY_NAME} gRPC::gpr gRPC::grpc gRPC::grpc++ gRPC::grpc++_alts)
 
-# target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+# target_link_libraries(${CLIENT_BINARY_NAME} ${Boost_LIBRARIES})
 
 
-add_executable(server ./grpcServer.cpp 
+add_executable(${SERVER_BINARY_NAME} ${SERVER_SRC}
   ${hw_proto_srcs} 
   ${hw_grpc_srcs}
 )
-target_link_libraries(server 
+target_link_libraries(${SERVER_BINARY_NAME} 
   ${_REFLECTION} 
   ${_GRPC_GRPCPP} 
   ${_PROTOBUF_LIBPROTOBUF} 
@@ -81,32 +92,32 @@ target_link_libraries(server
 
 # include_directories(${BOOST_INCLUDE_DIRS})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${TERMCOLOR_INCLUDE_DIRS})
+target_include_directories(${CLIENT_BINARY_NAME} PRIVATE ${TERMCOLOR_INCLUDE_DIRS})
 
 
-target_compile_options(${PROJECT_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
-target_compile_options(${PROJECT_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -D_FILE_OFFSET_BITS=64>)
+target_compile_options(${CLIENT_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
+target_compile_options(${CLIENT_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -D_FILE_OFFSET_BITS=64>)
 
 # optimized: 
-# target_compile_options(${PROJECT_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -O3 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
-# target_compile_options(${PROJECT_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -O3 -D_FILE_OFFSET_BITS=64>)
+# target_compile_options(${CLIENT_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -O3 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
+# target_compile_options(${CLIENT_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -O3 -D_FILE_OFFSET_BITS=64>)
 
 check_function_exists(fallocate HAVE_FALLOCATE)
 check_function_exists(fallocate HAVE_FLOCK)
 check_function_exists(utimensat HAVE_UTIMENSAT)
 check_function_exists(setxattr HAVE_XATTR)
 if (${HAVE_FALLOCATE})
-    target_compile_definitions(${PROJECT_NAME} PUBLIC HAVE_FALLOCATE)
+    target_compile_definitions(${CLIENT_BINARY_NAME} PUBLIC HAVE_FALLOCATE)
 endif ()
 if (${HAVE_FLOCK})
-    target_compile_definitions(${PROJECT_NAME} PUBLIC HAVE_FLOCK)
+    target_compile_definitions(${CLIENT_BINARY_NAME} PUBLIC HAVE_FLOCK)
 endif ()
 if (${HAVE_UTIMENSAT})
-    target_compile_definitions(${PROJECT_NAME} PUBLIC HAVE_UTIMENSAT)
+    target_compile_definitions(${CLIENT_BINARY_NAME} PUBLIC HAVE_UTIMENSAT)
 endif ()
 if (${HAVE_XATTR})
-    target_compile_definitions(${PROJECT_NAME} PUBLIC HAVE_XATTR)
+    target_compile_definitions(${CLIENT_BINARY_NAME} PUBLIC HAVE_XATTR)
 endif ()
 
 
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS ${CLIENT_BINARY_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)

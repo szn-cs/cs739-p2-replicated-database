@@ -11,6 +11,7 @@ build() {
   mkdir -p ./target/
   # copy binaries
   cp ./target/config/src/server ./target/
+  cp ./target/config/src/client ./target/
 
   (source ./script/build.sh && test)
 }
