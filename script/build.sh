@@ -8,9 +8,9 @@ build() {
   # build through `cmake`  or use `make -w -C ./target/config/`
   cmake -S . -B ./target/config && cmake --build ./target/config --parallel # --verbose
   ## move binaries from nested builds
-  mkdir -p ./target/release
+  mkdir -p ./target/
   # copy binaries
-  cp ./target/config/src/server ./target/release/
+  cp ./target/config/src/server ./target/
 
   (source ./script/build.sh && test)
 }

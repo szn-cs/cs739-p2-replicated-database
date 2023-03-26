@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.10.2)
 set(CMAKE_CXX_STANDARD 17)
 
 set(REPLICATEDDB_SRC 
-  server.cpp
-  client.cpp
+  ./grpcServer.cpp
+  ./grpcClient.cpp
 )
 
 # Protobuf
@@ -68,7 +68,7 @@ target_link_libraries(${PROJECT_NAME}
 # target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
 
-add_executable(server server.cpp 
+add_executable(server ./grpcServer.cpp 
   ${hw_proto_srcs} 
   ${hw_grpc_srcs}
 )
@@ -84,12 +84,12 @@ target_link_libraries(server
 target_include_directories(${PROJECT_NAME} PRIVATE ${TERMCOLOR_INCLUDE_DIRS})
 
 
-# target_compile_options(${PROJECT_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
-# target_compile_options(${PROJECT_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -D_FILE_OFFSET_BITS=64>)
+target_compile_options(${PROJECT_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
+target_compile_options(${PROJECT_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -D_FILE_OFFSET_BITS=64>)
 
 # optimized: 
-target_compile_options(${PROJECT_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -O3 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
-target_compile_options(${PROJECT_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -O3 -D_FILE_OFFSET_BITS=64>)
+# target_compile_options(${PROJECT_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -O3 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
+# target_compile_options(${PROJECT_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -O3 -D_FILE_OFFSET_BITS=64>)
 
 check_function_exists(fallocate HAVE_FALLOCATE)
 check_function_exists(fallocate HAVE_FLOCK)
