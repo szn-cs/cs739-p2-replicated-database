@@ -5,6 +5,8 @@ GRPC_Client::GRPC_Client(std::shared_ptr<Channel> channel) : stub_(ReplicatedDB:
 
 /** EXAMPLE: */
 std::string GRPC_Client::get(const std::string& path) {
+  std::cout << yellow << "GRPC_Client::get" << reset << std::endl;
+
   ClientContext context;
   Request request;
   Response response;

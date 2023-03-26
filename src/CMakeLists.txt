@@ -10,6 +10,7 @@ set(CLIENT_BINARY_NAME
 )
 
 set(SERVER_SRC 
+  server.cpp
   grpcServer.cpp
 )
 set(SERVER_BINARY_NAME 

@@ -39,6 +39,11 @@ using grpc::ServerWriter;
 using grpc::Status;  // https://grpc.github.io/grpc/core/md_doc_statuscodes.html
 using grpcInterface::ReplicatedDB;
 
+namespace fs = std::filesystem;
+using namespace std;
+using namespace grpcInterface;
+using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan;
+
 // Logic and data behind the server's behavior.
 class GRPC_Server final : public ReplicatedDB::Service {
   // pthread_mutex_t lock;
