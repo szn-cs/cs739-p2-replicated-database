@@ -3,7 +3,7 @@
 - Log distribution process
 
 ## config params: 
-- concurrency limit
+- concurrency limit α
 - Heartbeat every T milliseconds; T must be << round trip of message 
 
 ## persisted: 
