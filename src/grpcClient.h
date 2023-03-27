@@ -15,16 +15,8 @@
 
 #include "grpcInterface.grpc.pb.h"
 
-using grpc::Channel;
-using grpc::ClientContext;
-using grpc::ClientReader;
-using grpc::ClientWriter;
-using grpc::Status;
-
+using grpc::Channel, grpc::ClientContext, grpc::ClientReader, grpc::ClientWriter, grpc::Status;
 using namespace grpcInterface;
-using grpcInterface::ReplicatedDB;
-
-// EXAMPLE API keep it to amke sure thigns are working
 using grpcInterface::Request, grpcInterface::Response;
 using namespace std;
 using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan;
@@ -39,5 +31,5 @@ class GRPC_Client {
   std::string get(const std::string&);
 
  private:
-  std::unique_ptr<ReplicatedDB::Stub> stub_;
+  std::unique_ptr<grpcInterface::ReplicatedDB::Stub> stub_;
 };

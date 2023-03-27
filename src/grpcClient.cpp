@@ -1,7 +1,7 @@
 
 #include "./grpcClient.h"
 
-GRPC_Client::GRPC_Client(std::shared_ptr<Channel> channel) : stub_(ReplicatedDB::NewStub(channel)) {}
+GRPC_Client::GRPC_Client(std::shared_ptr<Channel> channel) : stub_(grpcInterface::ReplicatedDB::NewStub(channel)) {}
 
 /** EXAMPLE: */
 std::string GRPC_Client::get(const std::string& path) {
