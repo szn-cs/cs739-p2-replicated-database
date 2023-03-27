@@ -1,5 +1,5 @@
 # cs739-p2-replicated-database
-- [Paxos implementation]<./documentation/paxos-consensus.md>
+- [Paxos implementation](./documentation/paxos-consensus.md)
 
 # Setup: 
 
