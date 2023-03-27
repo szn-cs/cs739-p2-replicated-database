@@ -1,4 +1,5 @@
 # cs739-p2-replicated-database
+- [Paxos implementation]<./documentation/paxos-consensus.md>
 
 # Setup: 
 
@@ -6,7 +7,6 @@
 - run script `build.sh` → binary files in `./target`
 - check `run.sh` for running the program
   - to run funcitons in script files (without copy pasting): `$ (source ./script/<scriptname>.sh && <functioname>)`
-
 
 # Resources: 
 - 
