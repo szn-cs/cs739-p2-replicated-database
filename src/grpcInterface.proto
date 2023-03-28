@@ -1,20 +1,18 @@
 syntax = "proto3"; // we use proto version 3
 package grpcInterface;   // similar to namespace, avoid conflicts
 
-
-
 /** ReplicatedDB servic **/
 service ReplicatedDB {
   rpc get(Request) returns (Response) {};
   rpc set(Request) returns (Response) {};
-
 }
 
 /** Paxos consensus **/
 service PaxosConsensus { 
   rpc propose(Request) returns (Response) {};
   rpc accept(Request) returns (Response) {};
-
+  rpc success(Request) returns (Response) {};
+  rpc heartbeat(Request) returns (Response) {};
 }
 
 message Request {

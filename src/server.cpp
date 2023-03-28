@@ -24,32 +24,14 @@ void run_gRPC_server(std::string address) {
   server->Wait();
 }
 
-void RunServerDB(std::string address) {
-  gRPC_Server_DB service;
-
-  grpc::EnableDefaultHealthCheckService(true);
-  grpc::reflection::InitProtoReflectionServerBuilderPlugin();
-  ServerBuilder builder;
-  // Listen on the given address without any authentication mechanism.
-  builder.AddListeningPort(address, grpc::InsecureServerCredentials());
-  // Register "service" as the instance through which we'll communicate with
-  // clients. In this case it corresponds to an *synchronous* service.
-  builder.RegisterService(&service);
-  // Finally assemble the server.
-  std::unique_ptr<Server> server(builder.BuildAndStart());
-  std::cout << termcolor::blue << "⚡ Server listening on " << address << termcolor::reset << std::endl;
-
-  // Wait for the server to shutdown. Note that some other thread must be
-  // responsible for shutting down the server for this call to ever return.
-  server->Wait();
-}
-
 int main(int argc, char** argv) {
   struct stat info;
 
   // set defaults
   const std::string addressConsensus("0.0.0.0:8080");
   const std::string addressDB("0.0.0.0:8081");
+  // TODO: add list of address of quorum
+  // TODO: debug flag: debugging outputs, DB configuration modes.
   serverDirectory = Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server");
 
   // set configs from arguments

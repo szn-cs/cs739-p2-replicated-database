@@ -1,6 +1,7 @@
 # Multi-Paxos: distributes a log with enteries of single-decree instances. System picks a series of values. 
 - Leader election process: depose to server with highest ID from heatbeats received. If 2xT time passed, then act as leader. 
 - Log distribution process
+- DB atomic updates
 
 ## config params: 
 - concurrency limit α

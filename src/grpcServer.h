@@ -60,4 +60,6 @@ class gRPC_Server_Consensus final : public grpcInterface::PaxosConsensus::Servic
  public:
   Status propose(ServerContext*, const Request*, Response*) override;
   Status accept(ServerContext*, const Request*, Response*) override;
+  Status success(ServerContext*, const Request*, Response*) override;
+  Status heartbeat(ServerContext*, const Request*, Response*) override;
 };

@@ -27,3 +27,15 @@ popd
 ## Fedora gcc installation
 # dnf groupinstall 'Development Tools'
 # yum install gcc-c++
+
+function mac() {
+  su -
+
+  brew update
+  brew upgrade
+  brew info gcc
+  brew install gcc
+  brew cleanup
+
+  port install cmake
+}

@@ -8,10 +8,7 @@
 - check `run.sh` for running the program
   - to run funcitons in script files (without copy pasting): `$ (source ./script/<scriptname>.sh && <functioname>)`
 
-# Resources: 
-- 
-
-# Research papers: 
+# Resources & Research papers: 
 - EPaxos 
   - <https://lamport.azurewebsites.net/pubs/paxos-simple.pdf>
   - <https://www.usenix.org/system/files/nsdi21-tollman.pdf>
