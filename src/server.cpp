@@ -24,12 +24,20 @@ void run_gRPC_server(std::string address) {
   server->Wait();
 }
 
+auto runConsensusServer = [](std::string address) {
+  run_gRPC_server<gRPC_Server_DB>(address);
+};
+
+auto runDBServer = [](std::string address) {
+  run_gRPC_server<gRPC_Server_Consensus>(address);
+};
+
 int main(int argc, char** argv) {
   struct stat info;
 
   // set defaults
-  const std::string addressConsensus("0.0.0.0:8080");
-  const std::string addressDB("0.0.0.0:8081");
+  const std::string address_consensus("0.0.0.0:8080");
+  const std::string address_db("0.0.0.0:8081");
   // TODO: add list of address of quorum
   // TODO: debug flag: debugging outputs, DB configuration modes.
   serverDirectory = Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server");
@@ -43,8 +51,11 @@ int main(int argc, char** argv) {
   fs::create_directories(serverDirectory);
   std::cout << blue << "serverDirectory: " << serverDirectory << reset << std::endl;
 
-  run_gRPC_server<gRPC_Server_Consensus>(addressConsensus);
-  run_gRPC_server<gRPC_Server_DB>(addressDB);
+  std::thread db(runConsensusServer, address_db);
+  std::thread consensus(runDBServer, address_consensus);
+
+  db.join();
+  consensus.join();
 
   return 0;
 }

@@ -97,11 +97,10 @@ target_include_directories(${CLIENT_BINARY_NAME} PRIVATE ${TERMCOLOR_INCLUDE_DIR
 
 
 target_compile_options(${CLIENT_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
-target_compile_options(${CLIENT_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -D_FILE_OFFSET_BITS=64>)
-
+target_compile_options(${CLIENT_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -D_FILE_OFFSET_BITS=64>)
 # optimized: 
 # target_compile_options(${CLIENT_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -O3 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
-# target_compile_options(${CLIENT_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -O3 -D_FILE_OFFSET_BITS=64>)
+# target_compile_options(${CLIENT_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -O3 -D_FILE_OFFSET_BITS=64>)
 
 check_function_exists(fallocate HAVE_FALLOCATE)
 check_function_exists(fallocate HAVE_FLOCK)

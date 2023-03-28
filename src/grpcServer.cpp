@@ -1,5 +1,7 @@
 #include "./grpcServer.h"
 
+GRPC_Client::GRPC_Client(std::shared_ptr<Channel> channel) : stub_(grpcInterface::PaxosConsensus::NewStub(channel)) {}
+
 // struct Command {
 //   key : " ";  // leader key or custom ...
 //   value : " ";
@@ -20,6 +22,7 @@ Status gRPC_Server_DB::set(ServerContext* context, const Request* request, Respo
 
   // loop over the nodes the try to get a majority consensus
   // grpc req through
+  // call stub_ corresponding to PaxosConsensus
 
   return Status::OK;
 }

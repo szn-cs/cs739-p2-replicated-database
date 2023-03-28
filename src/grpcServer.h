@@ -63,3 +63,17 @@ class gRPC_Server_Consensus final : public grpcInterface::PaxosConsensus::Servic
   Status success(ServerContext*, const Request*, Response*) override;
   Status heartbeat(ServerContext*, const Request*, Response*) override;
 };
+
+// Receiver/Acecptor/Listener part of Paxus gRPC
+class GRPC_Client {
+ public:
+  GRPC_Client(std::shared_ptr<Channel> channel);
+
+  // std::string propose(const std::string&);
+  // std::string accept(const std::string&);
+  // std::string success(const std::string&);
+  // std::string heartbeat(const std::string&);
+
+ private:
+  std::unique_ptr<grpcInterface::PaxosConsensus::Stub> stub_;
+};
