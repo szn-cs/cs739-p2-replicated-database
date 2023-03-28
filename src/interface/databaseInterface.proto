@@ -1,0 +1,18 @@
+syntax = "proto3"; // we use proto version 3
+package databaseInterface;   // similar to namespace, avoid conflicts
+
+/** DatabaseService servic **/
+service DatabaseService {
+  rpc get(Request) returns (Response) {};
+  rpc set(Request) returns (Response) {};
+}
+
+message Request {
+    string s = 1;
+}
+
+message Response {
+    string m = 2;
+}
+
+

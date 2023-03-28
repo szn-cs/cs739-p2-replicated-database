@@ -1,4 +1,4 @@
-#include "server.h"
+#include "entrypoint.h"
 
 static std::unordered_map<std::string, int> serverclock;
 static std::string serverDirectory;
@@ -24,13 +24,8 @@ void run_gRPC_server(std::string address) {
   server->Wait();
 }
 
-auto runConsensusServer = [](std::string address) {
-  run_gRPC_server<gRPC_Server_DB>(address);
-};
-
-auto runDBServer = [](std::string address) {
-  run_gRPC_server<gRPC_Server_Consensus>(address);
-};
+auto runConsensusServer = [](std::string address) { run_gRPC_server<DatabaseRPC>(address); };
+auto runDBServer = [](std::string address) { run_gRPC_server<ConsensusRPC>(address); };
 
 int main(int argc, char** argv) {
   struct stat info;
@@ -38,9 +33,11 @@ int main(int argc, char** argv) {
   // set defaults
   const std::string address_consensus("0.0.0.0:8080");
   const std::string address_db("0.0.0.0:8081");
+
+  serverDirectory = Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server");
+
   // TODO: add list of address of quorum
   // TODO: debug flag: debugging outputs, DB configuration modes.
-  serverDirectory = Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server");
 
   // set configs from arguments
   if (argc == 2)
@@ -51,8 +48,8 @@ int main(int argc, char** argv) {
   fs::create_directories(serverDirectory);
   std::cout << blue << "serverDirectory: " << serverDirectory << reset << std::endl;
 
-  std::thread db(runConsensusServer, address_db);
   std::thread consensus(runDBServer, address_consensus);
+  std::thread db(runConsensusServer, address_db);
 
   db.join();
   consensus.join();

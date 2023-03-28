@@ -8,4 +8,5 @@
 #include <thread>
 #include <vector>
 
-#include "grpcServer.h"
+#include "Consensus.h"
+#include "Database.h"

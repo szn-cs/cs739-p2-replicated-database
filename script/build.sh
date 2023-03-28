@@ -10,8 +10,8 @@ build() {
   ## move binaries from nested builds
   mkdir -p ./target/
   # copy binaries
-  cp ./target/config/src/server ./target/
-  cp ./target/config/src/client ./target/
+  cp ./target/config/src/node ./target/
+  cp ./target/config/src/user ./target/
 
   (source ./script/build.sh && test)
 }

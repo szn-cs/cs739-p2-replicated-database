@@ -1,4 +1,4 @@
-# cs739-p2-replicated-database
+# Distributed Replicated Database [cs739-p2-replicated-database]
 - [Paxos implementation](./documentation/paxos-consensus.md)
 
 # Setup: 

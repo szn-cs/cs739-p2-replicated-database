@@ -1,8 +1,8 @@
 #pragma once
 #include <iostream>
 
-#include "./Utility.cpp"
-#include "./grpcClient.h"
+#include "../Utility.cpp"
+#include "./ClientRPC.h"
 
 namespace fs = std::filesystem;
 using namespace std;

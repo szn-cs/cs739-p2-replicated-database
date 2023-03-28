@@ -1,20 +1,21 @@
 cmake_minimum_required(VERSION 3.10.2)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 set(CLIENT_SRC 
-  client.cpp
-  grpcClient.cpp
+  user/entrypoint.cpp
+  user/ClientRPC.cpp
 )
 set(CLIENT_BINARY_NAME 
-  client
+  user
 )
 
 set(SERVER_SRC 
-  server.cpp
-  grpcServer.cpp
+  node/entrypoint.cpp
+  node/Consensus.cpp
+  node/Database.cpp
 )
 set(SERVER_BINARY_NAME 
-  server
+  node
 )
 
 
@@ -32,22 +33,31 @@ set(_GRPC_GRPCPP gRPC::grpc++)
 set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 
 # Proto file
-get_filename_component(hw_proto "./grpcInterface.proto" ABSOLUTE)
+get_filename_component(hw_proto "./interface/consensusInterface.proto" ABSOLUTE)
 get_filename_component(hw_proto_path "${hw_proto}" PATH)
+get_filename_component(hw_proto_2 "./interface/databaseInterface.proto" ABSOLUTE)
+get_filename_component(hw_proto_path_2 "${hw_proto_2}" PATH)
 # Generated sources
-set(hw_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/grpcInterface.pb.cc")
-set(hw_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/grpcInterface.pb.h")
-set(hw_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/grpcInterface.grpc.pb.cc")
-set(hw_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/grpcInterface.grpc.pb.h")
+set(hw_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.pb.cc")
+set(hw_proto_srcs_2 "${CMAKE_CURRENT_BINARY_DIR}/databaseInterface.pb.cc")
+set(hw_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.pb.h")
+set(hw_proto_hdrs_2 "${CMAKE_CURRENT_BINARY_DIR}/databaseInterface.pb.h")
+set(hw_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.grpc.pb.cc")
+set(hw_grpc_srcs_2 "${CMAKE_CURRENT_BINARY_DIR}/databaseInterface.grpc.pb.cc")
+set(hw_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.grpc.pb.h")
+set(hw_grpc_hdrs_2 "${CMAKE_CURRENT_BINARY_DIR}/databaseInterface.grpc.pb.h")
+
 add_custom_command(
-      OUTPUT "${hw_proto_srcs}" "${hw_proto_hdrs}" "${hw_grpc_srcs}" "${hw_grpc_hdrs}"
+      OUTPUT "${hw_proto_srcs}" "${hw_proto_srcs_2}" "${hw_proto_hdrs}" "${hw_proto_hdrs_2}" "${hw_grpc_srcs}" "${hw_grpc_srcs_2}" "${hw_grpc_hdrs}" "${hw_grpc_hdrs_2}"
       COMMAND ${_PROTOBUF_PROTOC}
       ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
         --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
         -I "${hw_proto_path}"
+        -I "${hw_proto_path_2}"
         --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
         "${hw_proto}"
-      DEPENDS "${hw_proto}")
+        "${hw_proto_2}"
+      DEPENDS "${hw_proto}" "${hw_proto_2}")
 
 # Include generated *.pb.h files
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
@@ -55,9 +65,13 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 # custom_hw_grpc_proto
 add_library(custom_hw_grpc_proto
   ${hw_grpc_srcs}
+  ${hw_grpc_srcs_2}
   ${hw_grpc_hdrs}
+  ${hw_grpc_hdrs_2}
   ${hw_proto_srcs}
-  ${hw_proto_hdrs})
+  ${hw_proto_srcs_2}
+  ${hw_proto_hdrs}
+  ${hw_proto_hdrs_2})
 target_link_libraries(custom_hw_grpc_proto
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
@@ -65,10 +79,13 @@ target_link_libraries(custom_hw_grpc_proto
 
 include(CheckFunctionExists)
 
-add_executable(${CLIENT_BINARY_NAME} ${CLIENT_SRC}
+add_executable(${CLIENT_BINARY_NAME} 
+  ${CLIENT_SRC}
   ${hw_proto_srcs}
-  ${hw_grpc_srcs})
-  
+  ${hw_proto_srcs_2}
+  ${hw_grpc_srcs}
+  ${hw_grpc_srcs_2}
+)
 target_link_libraries(${CLIENT_BINARY_NAME}
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
@@ -79,10 +96,12 @@ target_link_libraries(${CLIENT_BINARY_NAME}
 
 # target_link_libraries(${CLIENT_BINARY_NAME} ${Boost_LIBRARIES})
 
-
-add_executable(${SERVER_BINARY_NAME} ${SERVER_SRC}
+add_executable(${SERVER_BINARY_NAME} 
+  ${SERVER_SRC}
   ${hw_proto_srcs} 
+  ${hw_proto_srcs_2} 
   ${hw_grpc_srcs}
+  ${hw_grpc_srcs_2}
 )
 target_link_libraries(${SERVER_BINARY_NAME} 
   ${_REFLECTION} 
@@ -90,6 +109,9 @@ target_link_libraries(${SERVER_BINARY_NAME}
   ${_PROTOBUF_LIBPROTOBUF} 
   stdc++fs
 )
+
+
+
 
 # include_directories(${BOOST_INCLUDE_DIRS})
 
