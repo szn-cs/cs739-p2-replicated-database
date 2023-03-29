@@ -27,6 +27,10 @@ popd
 ## Fedora gcc installation
 # dnf groupinstall 'Development Tools'
 # yum install gcc-c++
+# yum install perl-IPC-Cmd
+# solve issue: https://github.com/microsoft/vcpkg/issues/12061
+# fedora installation https://techviewleo.com/install-vcpkg-c-library-manager-on-linux-macos-windows/
+# yum install -y perl-CPAN
 
 function mac() {
   su -
