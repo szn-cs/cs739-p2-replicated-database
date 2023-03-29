@@ -44,3 +44,19 @@
 6. retry RPC until all acceptors respond (partial replication if crashes); no-op to qcuickly complete operation;
 ### Success RPC
 - Run in background, allows acceptor to be caught up to speed; Repeat as necessary;
+### Code Architecture
+**We should hash out whether this design makes sense**
+- Consensus and Database run as two separate threads
+- Database receives requests from the client
+- Database forwards requests to the coordinator
+  - If there is no coordinator, Database initializes an election
+  - If Database is the coordinator, it just responds to the client
+  - If another Database (server) is the coordinator, that server will return success
+- Consensus thread handles all inter-server rpc communication
+  - Consensus stores a list of rpc stubs, one for each replica
+  - Will not return values, will only return information about a Database request
+    - For get() requests, will return a value
+    - For set() requests, will return the accepted value
+    - For election() requests, will return the server id of the new coordinator
+    - For recovery() requests, will return most recent log and database snapshot
+- May require communicating back with the Database thread, for instance, if a replica is a leader and needs to get a value for another replica that issues a get request

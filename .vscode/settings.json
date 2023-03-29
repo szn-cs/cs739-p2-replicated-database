@@ -188,6 +188,7 @@
 		"valarray": "cpp",
 		"variant": "cpp",
 		"numbers": "cpp",
-		"*.inc": "cpp"
+		"*.inc": "cpp",
+		"semaphore": "cpp"
 	}
 }

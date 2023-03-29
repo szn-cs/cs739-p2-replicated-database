@@ -12,7 +12,21 @@ message Request {
 }
 
 message Response {
+    string error = 1;
     string m = 2;
 }
 
+enum Operation {
+  GET = 0;
+  SET = 1;
+  DELETE = 2;
+  SET_COORDINATOR = 3;
+};
 
+
+message LogEntry {
+  int32 p_server_id = 1;
+  int32 a_server_id = 2;
+  Operation op = 3;
+  string accepted_value = 4;
+}
