@@ -3,6 +3,17 @@
 # on an isntance of UBUNTU 20.04 with Temporary Filesystem Size of 40 GB mounted to /root
 # copy over binaries from ./target/release
 
+test() {
+  # terminal 1
+  {
+    ./target/node
+  }
+  # terminal 2
+  {
+    ./target/user
+  }
+}
+
 server() {
   # SERVER_ADDRESS=c220g5-110912.wisc.cloudlab.us:50051
   SERVER_ADDRESS=0.0.0.0:8080
