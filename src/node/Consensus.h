@@ -34,6 +34,9 @@ using namespace databaseInterface;
 using grpc::Server, grpc::ServerBuilder, grpc::ServerContext, grpc::ServerReader, grpc::ServerWriter, grpc::Status;  // https://grpc.github.io/grpc/core/md_doc_statuscodes.html
 using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan;
 
+/**
+ * Consensus server RPC endpoint
+*/
 class ConsensusRPC : public consensusInterface::ConsensusService::Service {
  public:
   grpc::Status propose(ServerContext*, const consensusInterface::Request*, consensusInterface::Response*) override;
@@ -42,16 +45,9 @@ class ConsensusRPC : public consensusInterface::ConsensusService::Service {
   grpc::Status heartbeat(ServerContext*, const consensusInterface::Request*, consensusInterface::Response*) override;
 };
 
-class Consensus : ConsensusRPC {
-  // struct Command {
-  //   key : " ";  // leader key or custom ...
-  //   value : " ";
-  // }
-
-  // log DS
-  // Vector<Command> log;
-};
-
+/**
+ * Consensus client RPC calls to the server RPC endpoint
+*/
 class ConsensusClientRPC {
  public:
   ConsensusClientRPC(std::shared_ptr<Channel> channel);
@@ -64,4 +60,17 @@ class ConsensusClientRPC {
 
  private:
   std::unique_ptr<consensusInterface::ConsensusService::Stub> stub;
+};
+
+/**
+ * Consensus variables
+*/
+class Consensus : ConsensusRPC {
+  // struct Command {
+  //   key : " ";  // leader key or custom ...
+  //   value : " ";
+  // }
+
+  // log DS
+  // Vector<Command> log;
 };

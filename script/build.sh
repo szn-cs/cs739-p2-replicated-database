@@ -25,3 +25,7 @@ test() {
 clean() {
   cmake --build ./target/config --target clean
 }
+
+install_package() { 
+  ./dependency/vcpkg/vcpkg install <package_name>
+}

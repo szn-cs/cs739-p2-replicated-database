@@ -27,6 +27,17 @@ void run_gRPC_server(std::string address) {
 auto runConsensusServer = [](std::string address) { run_gRPC_server<DatabaseRPC>(address); };
 auto runDBServer = [](std::string address) { run_gRPC_server<ConsensusRPC>(address); };
 
+/**
+ * Handle following configuration parameters: 
+ * 1. debug flag
+ * RPC export info:
+ * 2. consensus RPC port
+ * 3. database RPC port
+ * Quorum settings: 
+ * 4. replicas consensus RPC addresses
+ * Fail configs: 
+ * 5. fail rate, etc.
+*/
 int main(int argc, char** argv) {
   struct stat info;
 
@@ -36,7 +47,6 @@ int main(int argc, char** argv) {
 
   serverDirectory = Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server");
 
-  // TODO: add list of address of quorum
   // TODO: debug flag: debugging outputs, DB configuration modes.
 
   // set configs from arguments

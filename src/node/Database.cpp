@@ -1,8 +1,5 @@
 #include "Database.h"
 
-/*
-    RPC handlers
-*/
 Status DatabaseRPC::get(ServerContext* context, const databaseInterface::Request* request, databaseInterface::Response* response) {
   std::cout << yellow << "DatabaseRPC::get" << reset << std::endl;
 
@@ -20,10 +17,26 @@ Status DatabaseRPC::set(ServerContext* context, const databaseInterface::Request
   return Status::OK;
 }
 
-/*
-    KV methods
-    TODO: Is this locking scheme good enough?
-*/
+DatabaseClientRPC::DatabaseClientRPC(std::shared_ptr<Channel> channel)
+    : stub(databaseInterface::DatabaseService::NewStub(channel)) {}
+
+std::string DatabaseClientRPC::get(const std::string& s) {
+  std::cout << yellow << "DatabaseClientRPC::get" << reset << std::endl;
+
+  return "default";
+}
+
+std::string DatabaseClientRPC::set(const std::string& s) {
+  std::cout << yellow << "DatabaseClientRPC::set" << reset << std::endl;
+
+  return "default";
+}
+
+/**
+ * Internal database KV methods 
+ * - not accessible by users only quorum participants/nodes.
+ * TODO: Is this locking scheme good enough?
+ */
 string Database::Get_KV(const string& key) {
   pthread_mutex_lock(&data_mutex);
   auto i = kv_store.find(key);
@@ -73,22 +86,4 @@ void Database::Set_Log(const string& key, int round, int a_server, databaseInter
   pax_log[key][round].set_op(op);
   pax_log[key][round].set_accepted_value(value);
   pthread_mutex_unlock(&log_mutex);
-}
-
-/*
-    Client interface
-*/
-DatabaseClientRPC::DatabaseClientRPC(std::shared_ptr<Channel> channel)
-    : stub(databaseInterface::DatabaseService::NewStub(channel)) {}
-
-std::string DatabaseClientRPC::get(const std::string& s) {
-  std::cout << yellow << "DatabaseClientRPC::get" << reset << std::endl;
-
-  return "default";
-}
-
-std::string DatabaseClientRPC::set(const std::string& s) {
-  std::cout << yellow << "DatabaseClientRPC::set" << reset << std::endl;
-
-  return "default";
 }

@@ -15,3 +15,5 @@
   - [Piazza] Proving that Paxos implementation works correctly: <https://harmony.cs.cornell.edu/docs/textbook/paxos/>
   - [Piazza] List of tests for distributed system: <https://asatarin.github.io/testing-distributed-systems/>
   - A good summary of the protocol with some psuedo code: <https://martinfowler.com/articles/patterns-of-distributed-systems/paxos.html/>
+  - [example C++] <https://github.com/jiahanzhu/PaxosKVStore>
+  - [example Go] <https://github.com/kkdai/paxos> <https://github.com/xiang90/paxos> <https://github.com/kr/paxos> 

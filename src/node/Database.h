@@ -34,6 +34,9 @@ using namespace databaseInterface;
 using grpc::Server, grpc::ServerBuilder, grpc::ServerContext, grpc::ServerReader, grpc::ServerWriter, grpc::Status;  // https://grpc.github.io/grpc/core/md_doc_statuscodes.html
 using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan;
 
+/**
+ * Database server RPC endpoint
+*/
 class DatabaseRPC : public databaseInterface::DatabaseService::Service {
  public:
   //  explicit DatabaseRPC() {
@@ -45,6 +48,21 @@ class DatabaseRPC : public databaseInterface::DatabaseService::Service {
   // // This just returns the current log and db snapshot to the Consensus thread, to be forwarded to a recovering replica
   // // This would only come from other servers
   // grpc::Status recovery(grpc::ServerContext*, const databaseInterface::RecoveryRequest*, databaseInterface::Recoveryresponse*) override;
+};
+
+/** 
+ * Database client RPC calls to the server RPC endpoint
+*/
+class DatabaseClientRPC {
+ public:
+  DatabaseClientRPC(std::shared_ptr<Channel> channel);
+
+  /** database calls*/
+  std::string get(const std::string&);
+  std::string set(const std::string&);
+
+ private:
+  std::unique_ptr<databaseInterface::DatabaseService::Stub> stub;
 };
 
 class Database : DatabaseRPC {
@@ -75,16 +93,4 @@ class Database : DatabaseRPC {
   void Set_Log(const string& key, int round);                                                               // Acceptor receives proposal
   void Set_Log(const string& key, int round, int p_server);                                                 // Acceptor promises proposal
   void Set_Log(const string& key, int round, int a_server, databaseInterface::Operation op, string value);  // Acceptor accepts proposal
-};
-
-class DatabaseClientRPC {
- public:
-  DatabaseClientRPC(std::shared_ptr<Channel> channel);
-
-  /** database calls*/
-  std::string get(const std::string&);
-  std::string set(const std::string&);
-
- private:
-  std::unique_ptr<databaseInterface::DatabaseService::Stub> stub;
 };
