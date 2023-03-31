@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "../Utility.cpp"
-#include "./ClientRPC.h"
+#include "../node/Database.h"
 
 namespace fs = std::filesystem;
 using namespace std;

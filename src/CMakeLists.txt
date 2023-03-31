@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CLIENT_SRC 
   user/entrypoint.cpp
-  user/ClientRPC.cpp
+  node/Database.cpp
 )
 set(CLIENT_BINARY_NAME 
   user

@@ -17,19 +17,35 @@ Status DatabaseRPC::set(ServerContext* context, const databaseInterface::Request
   return Status::OK;
 }
 
-DatabaseClientRPC::DatabaseClientRPC(std::shared_ptr<Channel> channel)
+DatabaseRPCWrapperCall::DatabaseRPCWrapperCall(std::shared_ptr<Channel> channel)
     : stub(databaseInterface::DatabaseService::NewStub(channel)) {}
 
-std::string DatabaseClientRPC::get(const std::string& s) {
-  std::cout << yellow << "DatabaseClientRPC::get" << reset << std::endl;
+std::string DatabaseRPCWrapperCall::get(const std::string& s) {
+  std::cout << yellow << "DatabaseRPCWrapperCall::get" << reset << std::endl;
 
-  return "default";
+  grpc::ClientContext context;
+  databaseInterface::Request request;
+  databaseInterface::Response response;
+
+  request.set_s(s);
+
+  grpc::Status status = this->stub->get(&context, request, &response);
+
+  return (status.ok()) ? response.m() : "RPC failed !";
 }
 
-std::string DatabaseClientRPC::set(const std::string& s) {
-  std::cout << yellow << "DatabaseClientRPC::set" << reset << std::endl;
+std::string DatabaseRPCWrapperCall::set(const std::string& s) {
+  std::cout << yellow << "DatabaseRPCWrapperCall::set" << reset << std::endl;
 
-  return "default";
+  grpc::ClientContext context;
+  databaseInterface::Request request;
+  databaseInterface::Response response;
+
+  request.set_s(s);
+
+  grpc::Status status = this->stub->set(&context, request, &response);
+
+  return (status.ok()) ? response.m() : "RPC failed !";
 }
 
 /**
@@ -59,31 +75,10 @@ void Database::Delete_KV(const string& key) {
   pthread_mutex_unlock(&data_mutex);
 }
 
-map<string, map<int, databaseInterface::LogEntry>> Database::Get_Log() {
+map<string, map<int, databaseInterface::LogEntry>> Consensus::Get_Log() {
   return pax_log;
 }
 
 map<string, string> Database::Get_DB() {
   return kv_store;
-}
-
-// Methods for adding to log at different points during paxos algorithm
-void Database::Set_Log(const string& key, int round) {
-  pthread_mutex_lock(&log_mutex);
-  pax_log[key][round];
-  pthread_mutex_unlock(&log_mutex);
-}
-
-void Database::Set_Log(const string& key, int round, int p_server) {
-  pthread_mutex_lock(&log_mutex);
-  pax_log[key][round].set_p_server_id(p_server);
-  pthread_mutex_unlock(&log_mutex);
-}
-
-void Database::Set_Log(const string& key, int round, int a_server, databaseInterface::Operation op, string value) {
-  pthread_mutex_lock(&log_mutex);
-  pax_log[key][round].set_a_server_id(a_server);
-  pax_log[key][round].set_op(op);
-  pax_log[key][round].set_accepted_value(value);
-  pthread_mutex_unlock(&log_mutex);
 }

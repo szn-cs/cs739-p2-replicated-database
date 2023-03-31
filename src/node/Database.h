@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "../Utility.cpp"
+#include "Consensus.h"
 #include "consensusInterface.grpc.pb.h"
 #include "databaseInterface.grpc.pb.h"
 
@@ -35,7 +36,7 @@ using grpc::Server, grpc::ServerBuilder, grpc::ServerContext, grpc::ServerReader
 using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan;
 
 /**
- * Database server RPC endpoint
+ * Database RPC endpoint (which the server exports on a particular port)
 */
 class DatabaseRPC : public databaseInterface::DatabaseService::Service {
  public:
@@ -51,11 +52,12 @@ class DatabaseRPC : public databaseInterface::DatabaseService::Service {
 };
 
 /** 
- * Database client RPC calls to the server RPC endpoint
+ * Database
+ * Wraps RPC calls (acts as client) to the RPC endpoint (server)
 */
-class DatabaseClientRPC {
+class DatabaseRPCWrapperCall {
  public:
-  DatabaseClientRPC(std::shared_ptr<Channel> channel);
+  DatabaseRPCWrapperCall(std::shared_ptr<Channel> channel);
 
   /** database calls*/
   std::string get(const std::string&);
@@ -65,32 +67,19 @@ class DatabaseClientRPC {
   std::unique_ptr<databaseInterface::DatabaseService::Stub> stub;
 };
 
-class Database : DatabaseRPC {
+/**
+ * Represents the State Machine (where KV store that keeps the data in memory or persistent)
+*/
+class Database {
  private:
   // TODO: Lock for each entry to improve latency?
   map<string, string> kv_store;
   pthread_mutex_t data_mutex;
-
-  // Store log as a map of keys, in which each round number is mapped to a log entry
-  // Once quorum is achieved, we can delete the log entry
-  map<string, map<int, databaseInterface::LogEntry>> pax_log;
-  pthread_mutex_t log_mutex;
-
-  // Constructs an empty log entry
-  databaseInterface::LogEntry new_log();
+  map<string, string> Get_DB();
 
  public:
   // Get, set, and delete values in the kv store
   string Get_KV(const string& key);
   void Set_KV(const string& key, string& value);
   void Delete_KV(const string& key);
-
-  // Returns current log and db snapshots
-  map<string, map<int, databaseInterface::LogEntry>> Get_Log();
-  map<string, string> Get_DB();
-
-  // Methods for adding to log at different points during paxos algorithm
-  void Set_Log(const string& key, int round);                                                               // Acceptor receives proposal
-  void Set_Log(const string& key, int round, int p_server);                                                 // Acceptor promises proposal
-  void Set_Log(const string& key, int round, int a_server, databaseInterface::Operation op, string value);  // Acceptor accepts proposal
 };

@@ -1,6 +1,6 @@
 #include "entrypoint.h"
 
-static ClientRPC* c;
+static DatabaseRPCWrapperCall* c;
 
 /**
  * Handle configurations: 
@@ -11,9 +11,9 @@ int main(int argc, char* argv[]) {
   int r = 0;
   string db_address = "0.0.0.0:8081";  // target address & port to send grpc requests to.
 
-  c = new ClientRPC(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
+  c = new DatabaseRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
 
-  string message = c->get("filename");
+  string message = c->get("Hello message");
 
   std::cout << message << std::endl;
 
