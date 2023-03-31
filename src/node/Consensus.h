@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "../Utility.cpp"
+#include "./Database.h"
 #include "consensusInterface.grpc.pb.h"
 #include "databaseInterface.grpc.pb.h"
 
