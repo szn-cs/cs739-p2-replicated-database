@@ -75,9 +75,9 @@ void Database::Delete_KV(const string& key) {
   pthread_mutex_unlock(&data_mutex);
 }
 
-map<string, map<int, databaseInterface::LogEntry>> Consensus::Get_Log() {
-  return pax_log;
-}
+// map<string, map<int, databaseInterface::LogEntry>> Consensus::Get_Log() {
+//   return pax_log;
+// }
 
 map<string, string> Database::Get_DB() {
   return kv_store;

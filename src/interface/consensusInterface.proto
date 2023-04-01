@@ -9,12 +9,29 @@ service ConsensusService {
   rpc heartbeat(Request) returns (Response) {};
 }
 
+enum Operation {
+  GET = 0;
+  SET = 1;
+  DELETE = 2;
+  SET_COORDINATOR = 3;
+};
+
 message Request {
-    string s = 1;
+    string key = 1;
+    string value = 2;
+    int32 pserver_id = 3;
+    int32 aserver_id = 4;
+    int32 round = 5;
+    Operation op = 6;
 }
 
+enum Status_Types {
+   OK = 0;
+   FAILED = 1;
+ }
+
 message Response {
-    string m = 2;
+  Status_Types status = 1;
 }
 
 

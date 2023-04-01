@@ -61,6 +61,9 @@ int main(int argc, char** argv) {
   std::thread consensus(runDBServer, address_consensus);
   std::thread db(runConsensusServer, address_db);
 
+  // set acceptor list -> vector<pair<int, std::string>>; pairs of server IDs with their addresses
+  // set leader -> pair<int, string>
+
   db.join();
   consensus.join();
 
