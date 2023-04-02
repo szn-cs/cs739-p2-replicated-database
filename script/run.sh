@@ -14,18 +14,15 @@ test() {
   }
 }
 
-server() {
-  # SERVER_ADDRESS=c220g5-110912.wisc.cloudlab.us:50051
-  SERVER_ADDRESS=0.0.0.0:8080
+test_heartbeat() {
   source ./script/setenv.sh
-
-  ./server $SERVER -serverAddress=$SERVER_ADDRESS
-}
-
-server_background() {
   # SERVER_ADDRESS=c220g5-110912.wisc.cloudlab.us:50051
-  SERVER_ADDRESS=0.0.0.0:8080
-  source ./script/setenv.sh
 
-  ./server $SERVER -serverAddress=$SERVER_ADDRESS >/dev/null 2>&1 &
+  ./target/node --port_consensus 8080 &
+  ./target/node --port_consensus 8081 &
+  ./target/node --port_consensus 8082 &
+  ./target/node --port_consensus 8083 &
+  ./target/node --port_consensus 8084 --flag.leader &
+
+  # ./server $SERVER -serverAddress=$SERVER_ADDRESS >/dev/null 2>&1 &
 }

@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "../Utility.cpp"
-#include "../node/Database.h"
+#include "../node/RPCWrapperCall.h"
 
 namespace fs = std::filesystem;
 using namespace std;

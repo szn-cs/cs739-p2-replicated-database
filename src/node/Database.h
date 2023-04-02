@@ -21,12 +21,11 @@
 #include <vector>
 
 #include "../Utility.cpp"
+#include "./RPCWrapperCall.h"
 #include "./entrypoint.h"
 #include "Consensus.h"
 #include "consensusInterface.grpc.pb.h"
 #include "databaseInterface.grpc.pb.h"
-
-#define CHUNK_SIZE 1572864
 
 namespace fs = std::filesystem;
 using namespace std;
@@ -50,22 +49,6 @@ class DatabaseRPC : public databaseInterface::DatabaseService::Service {
   // // This just returns the current log and db snapshot to the Consensus thread, to be forwarded to a recovering replica
   // // This would only come from other servers
   // grpc::Status recovery(grpc::ServerContext*, const databaseInterface::RecoveryRequest*, databaseInterface::Recoveryresponse*) override;
-};
-
-/** 
- * Database
- * Wraps RPC calls (acts as client) to the RPC endpoint (server)
-*/
-class DatabaseRPCWrapperCall {
- public:
-  DatabaseRPCWrapperCall(std::shared_ptr<Channel> channel);
-
-  /** database calls*/
-  std::string get(const std::string&);
-  std::string set(const std::string&);
-
- private:
-  std::unique_ptr<databaseInterface::DatabaseService::Stub> stub;
 };
 
 /**

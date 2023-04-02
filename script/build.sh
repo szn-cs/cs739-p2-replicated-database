@@ -10,9 +10,9 @@ build() {
   ## move binaries from nested builds
   mkdir -p ./target/
   # copy binaries
-  cp ./target/config/src/node ./target/
-  cp ./target/config/src/user ./target/
-  cp ./config/node.config ./target/
+  cp ./target/config/node ./target/
+  cp ./target/config/user ./target/
+  cp ./config/node.ini ./target/
 
   (source ./script/build.sh && test)
 }
@@ -38,5 +38,5 @@ install_package() {
   # resolve versioning https://www.appsloveworld.com/cplus/100/197/cmake-new-boost-version-may-have-incorrect-or-missing-dependencies-and-imported
   # get builtin-baseline for vcpkg.json
   # https://learn.microsoft.com/en-us/vcpkg/users/examples/versioning.getting-started#builtin-baseline
-  (cd ${VCPKG} && git rev-parse HEAD)
+  # (cd ${VCPKG} && git rev-parse HEAD)
 }

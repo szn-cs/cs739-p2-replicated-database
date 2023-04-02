@@ -10,8 +10,7 @@ using namespace std;
 
 extern Config config;
 
-ConsensusRPCWrapperCall::ConsensusRPCWrapperCall(std::shared_ptr<Channel> channel)
-    : stub(consensusInterface::ConsensusService::NewStub(channel)) {}
+std::vector<Node> Consensus::cluster;
 
 Status ConsensusRPC::propose(ServerContext* context, const consensusInterface::Request* request, consensusInterface::Response* response) {
   std::cout << yellow << "ConsensusRPC::propose" << reset << std::endl;
@@ -108,33 +107,11 @@ Status ConsensusRPC::success(ServerContext* context, const consensusInterface::R
 }
 
 Status ConsensusRPC::heartbeat(ServerContext* context, const consensusInterface::Request* request, consensusInterface::Response* response) {
-  std::cout << yellow << "ConsensusRPC::accept" << reset << std::endl;
+  std::cout << yellow << "ConsensusRPC::heartbeat" << reset << std::endl;
+
+  cout << "recieved heartbeat from: " << endl;
 
   return Status::OK;
-}
-
-std::string ConsensusRPCWrapperCall::propose(const std::string& s) {
-  std::cout << yellow << "ConsensusRPCWrapperCall::propose" << reset << std::endl;
-
-  return "default";
-}
-
-std::string ConsensusRPCWrapperCall::accept(const std::string& s) {
-  std::cout << yellow << "ConsensusRPCWrapperCall::accept" << reset << std::endl;
-
-  return "default";
-}
-
-std::string ConsensusRPCWrapperCall::success(const std::string& s) {
-  std::cout << yellow << "ConsensusRPCWrapperCall::success" << reset << std::endl;
-
-  return "default";
-}
-
-std::string ConsensusRPCWrapperCall::heartbeat(const std::string& s) {
-  std::cout << yellow << "ConsensusRPCWrapperCall::heartbeat" << reset << std::endl;
-
-  return "default";
 }
 
 // Methods for adding to log at different points during paxos algorithm

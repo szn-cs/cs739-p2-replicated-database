@@ -3,6 +3,7 @@ set(SERVER_SRC
   ${SOURCE_FOLDER}/node/entrypoint.cpp
   ${SOURCE_FOLDER}/node/Consensus.cpp
   ${SOURCE_FOLDER}/node/Database.cpp
+  ${SOURCE_FOLDER}/node/RPCWrapperCall.cpp
 )
 set(SERVER_BINARY_NAME 
   node
