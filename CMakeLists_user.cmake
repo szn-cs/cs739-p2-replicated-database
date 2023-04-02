@@ -1,7 +1,7 @@
 #---CLIENT------------------------------------------------
 set(CLIENT_SRC 
-  ${CMAKE_CURRENT_SOURCE_DIR}/user/entrypoint.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/node/Database.cpp
+  ${SOURCE_FOLDER}/user/entrypoint.cpp
+  ${SOURCE_FOLDER}/node/Database.cpp
 )
 set(CLIENT_BINARY_NAME 
   user

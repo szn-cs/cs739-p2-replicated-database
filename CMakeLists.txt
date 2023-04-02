@@ -13,6 +13,7 @@ project (replicated_db
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/config/cmake;${CMAKE_MODULE_PATH}")
 set(CMAKE_BUILD_TYPE RelWithDebInfo) # debug
+set(SOURCE_FOLDER "${PROJECT_SOURCE_DIR}/src")
 
 # print debug information 
 # include(./config/PrintVariables.cmake) # log cmake variables
@@ -21,9 +22,26 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo) # debug
 # enable_testing()
 
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
+# find packages ----------------------------
+# find vcpkg packages
+find_package(gRPC CONFIG REQUIRED)
+message(STATUS "Using gRPC ${gRPC_VERSION}")
 
+# Boost package
+# install correct version https://www.appsloveworld.com/cplus/100/197/cmake-new-boost-version-may-have-incorrect-or-missing-dependencies-and-imported
+find_package(Boost 1.81.0 COMPONENTS program_options filesystem REQUIRED)
+message("📚 boost lib: ${Boost_LIBRARIES}")
+message("📚 boost inc: ${Boost_INCLUDE_DIR}")
 
+# Termcolor package
+find_path(TERMCOLOR_INCLUDE_DIRS "termcolor/termcolor.hpp")
+#-------------------------------------------
+
+include_directories(${BOOST_INCLUDE_DIRS})
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_interface.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_node.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_user.cmake)
 
 # CPACK steers build files to proper paths (maybe used later in build process)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

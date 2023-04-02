@@ -1,8 +1,8 @@
 #---SERVER------------------------------------------------
 set(SERVER_SRC 
-  ${CMAKE_CURRENT_SOURCE_DIR}/node/entrypoint.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/node/Consensus.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/node/Database.cpp
+  ${SOURCE_FOLDER}/node/entrypoint.cpp
+  ${SOURCE_FOLDER}/node/Consensus.cpp
+  ${SOURCE_FOLDER}/node/Database.cpp
 )
 set(SERVER_BINARY_NAME 
   node
