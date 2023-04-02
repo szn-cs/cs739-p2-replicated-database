@@ -71,12 +71,13 @@ class ConsensusRPCWrapperCall {
 class Consensus {
  public:
   // Returns current log and db snapshots
-  map<string, map<int, databaseInterface::LogEntry>> Get_Log();
+  static map<string, map<int, databaseInterface::LogEntry>> Get_Log();
 
   // Methods for adding to log at different points during paxos algorithm
   void Set_Log(const string& key, int round);                                                               // Acceptor receives proposal
   void Set_Log(const string& key, int round, int p_server);                                                 // Acceptor promises proposal
   void Set_Log(const string& key, int round, int a_server, databaseInterface::Operation op, string value);  // Acceptor accepts proposal
+  static pair<string, int> Find_Max_Proposal(const string& key, int round);
 
  private:
   // Store log as a map of keys, in which each round number is mapped to a log entry
@@ -85,4 +86,23 @@ class Consensus {
   pthread_mutex_t log_mutex;
   // Constructs an empty log entry
   databaseInterface::LogEntry new_log();
+
 };
+
+string readFromDisk(string path) {
+
+  std::ifstream file(path);
+  std::string value;
+  std::getline(file, value);
+
+  return value;
+
+}
+
+void writeToDisk(string path, string value) {
+
+  ofstream file2(path, std::ios::trunc); // open the file for writing, truncate existing content
+  file2 << value; // write the new content to the file
+  file2.close(); 
+
+}
