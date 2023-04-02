@@ -22,6 +22,7 @@
 
 #include "../Utility.cpp"
 #include "./Database.h"
+#include "./config.h"
 #include "consensusInterface.grpc.pb.h"
 #include "databaseInterface.grpc.pb.h"
 

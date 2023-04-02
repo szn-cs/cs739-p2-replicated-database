@@ -1,5 +1,7 @@
 #include "./Consensus.h"
 
+extern Config config;
+
 ConsensusRPCWrapperCall::ConsensusRPCWrapperCall(std::shared_ptr<Channel> channel)
     : stub(consensusInterface::ConsensusService::NewStub(channel)) {}
 

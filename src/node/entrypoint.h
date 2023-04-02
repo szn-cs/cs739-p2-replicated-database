@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -17,3 +19,4 @@
 
 #include "Consensus.h"
 #include "Database.h"
+#include "config.h"
