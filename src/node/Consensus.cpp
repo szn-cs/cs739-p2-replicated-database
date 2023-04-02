@@ -1,4 +1,5 @@
 #include "Consensus.h"
+
 #include <math.h>
 
 using namespace std;
@@ -16,8 +17,7 @@ Status ConsensusRPC::propose(ServerContext* context, const consensusInterface::R
   std::cout << yellow << "ConsensusRPC::propose" << reset << std::endl;
 
   if (context->IsCancelled()) {
-    return Status(grpc::StatusCode::CANCELLED,
-                  "Deadline exceeded or Client cancelled, abandoning.");
+    return Status(grpc::StatusCode::CANCELLED, "Deadline exceeded or Client cancelled, abandoning.");
   }
 
   // requests from clients reach the propose stage
@@ -30,15 +30,13 @@ Status ConsensusRPC::propose(ServerContext* context, const consensusInterface::R
 
   // see if there exists a value for the given key with a proposal number greater than the current
 
-  pair<string, int> already_seen_value = Consensus::Find_Max_Proposal(key, round); 
+  pair<string, int> already_seen_value = Consensus::Find_Max_Proposal(key, round);
 
   //Set_Log(key, proposalNo);
 
-  if(already_seen_value.first != "") {
-
+  if (already_seen_value.first != "") {
     round = already_seen_value.second + 1;
     value = already_seen_value.first;
-
   }
 
   // retrieve maxRound
@@ -55,7 +53,7 @@ Status ConsensusRPC::propose(ServerContext* context, const consensusInterface::R
 
   //Set_Log(key, proposalNo);
 
-  // proposer sends to all replicas for acceptance , 
+  // proposer sends to all replicas for acceptance ,
   // if it gets majority acceptance
   // starts commiting
 
@@ -149,7 +147,7 @@ void Consensus::Set_Log(const string& key, int round) {
   pthread_mutex_unlock(&log_mutex);
 }
 
-// update proposal server 
+// update proposal server
 
 void Consensus::Set_Log(const string& key, int round, int p_server) {
   pthread_mutex_lock(&log_mutex);
@@ -167,9 +165,12 @@ void Consensus::Set_Log(const string& key, int round, int a_server, databaseInte
   pthread_mutex_unlock(&log_mutex);
 }
 
-// Find the highest proposal number seen for the given key
-pair<string, int> Consensus::Find_Max_Proposal(const string& key, int round) {
+map<string, map<int, databaseInterface::LogEntry>> Consensus::Get_Log() {
+}
 
+// Find the highest proposal number seen for the given key
+pair<string, int>
+Consensus::Find_Max_Proposal(const string& key, int round) {
   map<string, map<int, databaseInterface::LogEntry>> pax_log = Consensus::Get_Log();
 
   //pthread_mutex_lock(&log_mutex);
@@ -181,9 +182,22 @@ pair<string, int> Consensus::Find_Max_Proposal(const string& key, int round) {
   }
   //pthread_mutex_unlock(&log_mutex);
 
-  if(max_proposal == round) 
+  if (max_proposal == round)
     return make_pair("", 0);
 
   return make_pair(pax_log[key][max_proposal].accepted_value(), max_proposal);
 }
 
+string Consensus::readFromDisk(string path) {
+  std::ifstream file(path);
+  std::string value;
+  std::getline(file, value);
+
+  return value;
+}
+
+void Consensus::writeToDisk(string path, string value) {
+  ofstream file2(path, std::ios::trunc);  // open the file for writing, truncate existing content
+  file2 << value;                         // write the new content to the file
+  file2.close();
+}

@@ -78,6 +78,8 @@ class Consensus {
   void Set_Log(const string& key, int round, int p_server);                                                 // Acceptor promises proposal
   void Set_Log(const string& key, int round, int a_server, databaseInterface::Operation op, string value);  // Acceptor accepts proposal
   static pair<string, int> Find_Max_Proposal(const string& key, int round);
+  string readFromDisk(string path);
+  void writeToDisk(string path, string value);
 
  private:
   // Store log as a map of keys, in which each round number is mapped to a log entry
@@ -86,23 +88,4 @@ class Consensus {
   pthread_mutex_t log_mutex;
   // Constructs an empty log entry
   databaseInterface::LogEntry new_log();
-
 };
-
-string readFromDisk(string path) {
-
-  std::ifstream file(path);
-  std::string value;
-  std::getline(file, value);
-
-  return value;
-
-}
-
-void writeToDisk(string path, string value) {
-
-  ofstream file2(path, std::ios::trunc); // open the file for writing, truncate existing content
-  file2 << value; // write the new content to the file
-  file2.close(); 
-
-}

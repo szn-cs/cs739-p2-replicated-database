@@ -68,9 +68,10 @@ void parse_options(int argc, char** argv) {
       // read from configuration file
       auto config_file = variables.at("config").as<std::string>();
       std::ifstream ifs(config_file.c_str());
-      if (!ifs)
-        throw std::runtime_error("can not open configuration file: " + config_file);
-      po::store(po::parse_config_file(ifs, config_file), variables);
+      // if (!ifs)
+      //   throw std::runtime_error("can not open configuration file: " + config_file);
+      if (ifs)
+        po::store(po::parse_config_file(ifs, config_file), variables);
       po::notify(variables);
     }
 
@@ -100,9 +101,6 @@ int main(int argc, char* argv[]) {
 
   std::thread consensus(runDBServer, "0.0.0.0:" + config.port_database);
   std::thread db(runConsensusServer, "0.0.0.0:" + config.port_consensus);
-
-  // set acceptor list -> vector<pair<int, std::string>>; pairs of server IDs with their addresses
-  // set leader -> pair<int, string>
 
   db.join();
   consensus.join();

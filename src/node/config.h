@@ -11,4 +11,7 @@ struct Config {                               // Declare options that will be al
   bool debug;                                 // debug flag
 
   // TODO: fail rate, and testing configs
+  // TODO: if needed
+  // set acceptor list -> vector<pair<int, std::string>>; pairs of server IDs with their addresses
+  // set leader -> pair<int, string>
 };
