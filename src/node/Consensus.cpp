@@ -8,8 +8,6 @@ using namespace std;
 
 // paxos_addresses_ : a list of network addresses of the Paxos servers , IP addresses and ports
 
-extern Config config;
-
 std::vector<Node> Consensus::cluster;
 
 Status ConsensusRPC::propose(ServerContext* context, const consensusInterface::Request* request, consensusInterface::Response* response) {

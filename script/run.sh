@@ -25,4 +25,13 @@ test_heartbeat() {
   ./target/node -g --port_consensus 8084 --flag.leader &
 
   # ./server $SERVER -serverAddress=$SERVER_ADDRESS >/dev/null 2>&1 &
+
+  # Stop all background jobs
+  # kill $(jobs -p)
+
+  # Bring background to foreground
+  # jobs
+  # fg
+  # bg
+  # fg %1
 }

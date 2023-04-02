@@ -25,3 +25,5 @@
 #include "Consensus.h"
 #include "Database.h"
 #include "config.h"
+
+using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan, termcolor::grey;

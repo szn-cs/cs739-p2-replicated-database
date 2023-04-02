@@ -23,6 +23,14 @@ struct Address {
         port(port) {}
 };
 
+/**
+ * Configuration info
+ * 
+ * options input priority/hierarchy: 
+ *  1. command-line arguments
+ *  2. configuration file
+ *  3. default hardcoded values
+*/
 struct Config {  // Declare options that will be allowed both on command line and in config file
   std::string ip;
   unsigned short port_database, port_consensus;  // RPC expotred ports

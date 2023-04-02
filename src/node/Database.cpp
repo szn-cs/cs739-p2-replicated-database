@@ -1,7 +1,5 @@
 #include "Database.h"
 
-extern Config config;
-
 Status DatabaseRPC::get(ServerContext* context, const databaseInterface::Request* request, databaseInterface::Response* response) {
   std::cout << yellow << "DatabaseRPC::get" << reset << std::endl;
 

@@ -35,6 +35,8 @@ using namespace databaseInterface;
 using grpc::Server, grpc::ServerBuilder, grpc::ServerContext, grpc::ServerReader, grpc::ServerWriter, grpc::Status;  // https://grpc.github.io/grpc/core/md_doc_statuscodes.html
 using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan;
 
+extern Config config;
+
 /**
  * Consensus RPC endpoint (which the server exposes through a specific port)
 */
@@ -57,6 +59,41 @@ struct Node {
 */
 class Consensus {
  public:
+  /**
+   * send RPC pings to all cluster nodes
+  */
+  static void initializeProtocol() {
+    sleep(5);
+    for (Node n : Consensus::cluster) {
+      n.stub_consensus->ping("message");
+    }
+  }
+
+  /** 
+   * create stub instances for each of the cluster nodes.
+  */
+  static void consensus_stub_rpc_setup() {
+    if (!config.flag.leader)
+      return;
+
+    for (auto it = config.cluster.begin(); it != config.cluster.end(); ++it) {
+      Node n = {
+          .stub_consensus = new ConsensusRPCWrapperCall(grpc::CreateChannel(*it, grpc::InsecureChannelCredentials())),
+          .stub_database = new DatabaseRPCWrapperCall(grpc::CreateChannel(*it, grpc::InsecureChannelCredentials())),
+          .address = *it};
+      Consensus::cluster.push_back(n);
+    }
+
+    // {
+    //   // Transform each config into a address via make_address, inserting each object into the vector.
+    //   std::vector<Address> cluster;
+    //   std::transform(config.cluster.begin(), config.cluster.end(), std::back_inserter(cluster), make_address);
+
+    //   // Print nodes.
+    //   std::copy(cluster.begin(), cluster.end(), std::ostream_iterator<Address>(std::cout, "\n"));
+    // }
+  }
+
   static map<string, map<int, databaseInterface::LogEntry>> Get_Log();  // Returns current log and db snapshots
 
   // Methods for adding to log at different points during paxos algorithm

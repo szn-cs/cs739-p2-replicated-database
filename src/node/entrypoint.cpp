@@ -43,6 +43,77 @@ Address make_address(const std::string& address_and_port) {
   return Address(tokens[0], boost::lexical_cast<unsigned short>(tokens[1]));
 }
 
+/**
+ * https://download.cosine.nl/gvacanti/parsing_configuration_files_c++_CVu265.pdf
+ * 
+*/
+void parse_options(int argc, char** argv) {
+  namespace po = boost::program_options;  // boost https://www.boost.org/doc/libs/1_81_0/doc/html/po.html
+  namespace fs = boost::filesystem;
+
+  std::filesystem::path executablePath;
+  {
+    fs::path full_path(fs::initial_path<fs::path>());
+    full_path = fs::system_complete(fs::path(argv[0]));
+    executablePath = full_path.parent_path().string();
+  }  // namespace boost::filesystem;
+
+  po::variables_map variables;
+  po::options_description cmd_options;
+  po::options_description file_options;
+
+  try {
+    { /** define program options schema */
+      po::options_description generic("Generic options");
+      po::options_description primary("Main program options");
+
+      generic.add_options()("help,h", "CMD options list");
+      generic.add_options()("config,c", po::value<std::string>()->default_value(Utility::concatenatePath(executablePath, "./node.ini")), "configuration file");
+      primary.add_options()("port_database", po::value<unsigned short>(&config.port_database)->default_value(8090), "Port of database RPC service");
+      primary.add_options()("port_consensus,p", po::value<unsigned short>(&config.port_consensus)->default_value(8080), "Port of consensus RPC service");
+      primary.add_options()("database_directory,d", po::value<std::string>(&config.database_directory)->default_value(Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server")), "Directory of database data");
+      primary.add_options()("cluster.address,a", make_value(&config.cluster), "Addresses (incl. ports) of consensus cluster participants <address:port>");
+      primary.add_options()("flag.debug,g", po::bool_switch(&config.flag.debug)->default_value(false), "Debug flag");
+      primary.add_options()("flag.leader", po::bool_switch(&config.flag.leader)->default_value(false), "testing: leader flag");
+      primary.add_options()("timeout,t", po::value<int>(&config.timeout)->default_value(1), "Timeout ");
+
+      cmd_options.add(generic).add(primary);  // set options allowed on command line
+      file_options.add(primary);              // set options allowed in config file
+    }
+
+    { /** parse & set options from different sources */
+      // po::store(po::parse_command_line(argc, argv, desc), vm);
+      po::store(po::command_line_parser(argc, argv).options(cmd_options).run(), variables);
+
+      // read from configuration file
+      auto config_file = variables.at("config").as<std::string>();
+      std::ifstream ifs(config_file.c_str());
+      // if (!ifs)
+      //   throw std::runtime_error("can not open configuration file: " + config_file);
+      if (ifs)
+        po::store(po::parse_config_file(ifs, file_options), variables);
+      po::notify(variables);
+      ifs.close();
+    }
+
+    if (variables.count("help")) {
+      std::cout << "Distributed Replicated Database\n"
+                << cmd_options << '\n'
+                << endl;
+      exit(0);
+    }
+
+  } catch (const po::error& ex) {
+    std::cerr << red << ex.what() << reset << "\n\n";
+
+    std::cout << "Distributed Replicated Database\n"
+              << cmd_options << '\n'
+              << endl;
+
+    exit(1);
+  }
+}
+
 template <typename S>
 void run_gRPC_server(std::string address) {
   S service;
@@ -67,119 +138,26 @@ auto runDBServer = [](Address a) { run_gRPC_server<DatabaseRPC>(a.address + ":" 
 auto runConsensusServer = [](Address a) { run_gRPC_server<ConsensusRPC>(a.address + ":" + boost::lexical_cast<std::string>(a.port)); };
 
 /**
- * https://download.cosine.nl/gvacanti/parsing_configuration_files_c++_CVu265.pdf
- * 
+ * initialize configurations, run RPC servers, and start consensus coordination
 */
-void parse_options(int argc, char** argv) {
-  namespace po = boost::program_options;  // boost https://www.boost.org/doc/libs/1_81_0/doc/html/po.html
-  namespace fs = boost::filesystem;
-
-  std::filesystem::path executablePath;
-  {
-    fs::path full_path(fs::initial_path<fs::path>());
-    full_path = fs::system_complete(fs::path(argv[0]));
-    executablePath = full_path.parent_path().string();
-  }  // namespace boost::filesystem;
-
-  try {
-    po::options_description cmd_options;
-    po::options_description file_options;
-
-    { /** define program options schema */
-      po::options_description generic("Generic options");
-      po::options_description primary("Main program options");
-
-      generic.add_options()("help,h", "CMD options list");
-      generic.add_options()("config,c", po::value<std::string>()->default_value(Utility::concatenatePath(executablePath, "./node.ini")), "configuration file");
-      primary.add_options()("port_database", po::value<unsigned short>(&config.port_database)->default_value(8090), "Port of database RPC service");
-      primary.add_options()("port_consensus,p", po::value<unsigned short>(&config.port_consensus)->default_value(8080), "Port of consensus RPC service");
-      primary.add_options()("database_directory,d", po::value<std::string>(&config.database_directory)->default_value(Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server")), "Directory of database data");
-      primary.add_options()("cluster.address,a", make_value(&config.cluster), "Addresses (incl. ports) of consensus cluster participants <address:port>");
-      primary.add_options()("flag.debug,g", po::bool_switch(&config.flag.debug)->default_value(false), "Debug flag");
-      primary.add_options()("flag.leader", po::bool_switch(&config.flag.leader)->default_value(false), "testing: leader flag");
-      primary.add_options()("timeout,t", po::value<int>(&config.timeout)->default_value(1), "Timeout ");
-
-      cmd_options.add(generic).add(primary);  // set options allowed on command line
-      file_options.add(primary);              // set options allowed in config file
-    }
-
-    po::variables_map variables;
-    { /** parse & set options from different sources */
-      // po::store(po::parse_command_line(argc, argv, desc), vm);
-      po::store(po::command_line_parser(argc, argv).options(cmd_options).run(), variables);
-
-      // read from configuration file
-      auto config_file = variables.at("config").as<std::string>();
-      std::ifstream ifs(config_file.c_str());
-      // if (!ifs)
-      //   throw std::runtime_error("can not open configuration file: " + config_file);
-      if (ifs)
-        po::store(po::parse_config_file(ifs, file_options), variables);
-      po::notify(variables);
-      ifs.close();
-    }
-
-    if (variables.count("help")) {
-      std::cout << "Distributed Replicated Database\n"
-                << cmd_options << '\n'
-                << endl;
-      exit(0);
-    }
-
-  } catch (const po::error& ex) {
-    std::cerr << ex.what() << '\n';
-    exit(1);
-  }
-}
-
-void consensus_stub_rpc_setup() {
-  if (!config.flag.leader)
-    return;
-
-  for (auto it = config.cluster.begin(); it != config.cluster.end(); ++it) {
-    Node n = {
-        .stub_consensus = new ConsensusRPCWrapperCall(grpc::CreateChannel(*it, grpc::InsecureChannelCredentials())),
-        .stub_database = new DatabaseRPCWrapperCall(grpc::CreateChannel(*it, grpc::InsecureChannelCredentials())),
-        .address = *it};
-    Consensus::cluster.push_back(n);
-  }
-
-  // {
-  //   // Transform each config into a address via make_address, inserting each object into the vector.
-  //   std::vector<Address> cluster;
-  //   std::transform(config.cluster.begin(), config.cluster.end(), std::back_inserter(cluster), make_address);
-
-  //   // Print nodes.
-  //   std::copy(cluster.begin(), cluster.end(), std::ostream_iterator<Address>(std::cout, "\n"));
-  // }
-}
-
-// TODO:
-void initiateConsensus() {
-  sleep(5);
-  for (Node n : Consensus::cluster) {
-    n.stub_consensus->ping("message");
-  }
-}
-
 int main(int argc, char* argv[]) {
   struct stat info;
 
+  // parse options from different sources
   parse_options(argc, argv);
 
-  {
-    // TODO: handle database directory
-    // create database direcotry directory if doesn't exist
-    fs::create_directories(fs::absolute(config.database_directory));
-  }
+  // handle database directory TODO:
+  fs::create_directories(fs::absolute(config.database_directory));  // create database direcotry directory if doesn't exist
 
+  // RPC services on separate threads
   Address a1 = config.getAddress<app::Service::Consensus>(), a2 = config.getAddress<app::Service::Database>();
   std::thread t2(runConsensusServer, a1);
   std::thread t1(runDBServer, a2);
   std::cout << termcolor::blue << "⚡ Consensus service: " << a1.address + ":" + std::to_string(a1.port) << " | Database service: " << a2.address + ":" + std::to_string(a2.port) << termcolor::reset << std::endl;
-  std::thread t3(initiateConsensus);
+  std::thread t3(Consensus::initializeProtocol);
 
-  consensus_stub_rpc_setup();
+  // start cluster coordination
+  Consensus::consensus_stub_rpc_setup();
 
   t1.join();
   t2.join();

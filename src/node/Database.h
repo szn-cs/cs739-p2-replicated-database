@@ -24,6 +24,7 @@
 #include "./RPCWrapperCall.h"
 #include "./entrypoint.h"
 #include "Consensus.h"
+#include "config.h"
 #include "consensusInterface.grpc.pb.h"
 #include "databaseInterface.grpc.pb.h"
 
@@ -34,6 +35,8 @@ using namespace consensusInterface;
 using namespace databaseInterface;
 using grpc::Server, grpc::ServerBuilder, grpc::ServerContext, grpc::ServerReader, grpc::ServerWriter, grpc::Status;  // https://grpc.github.io/grpc/core/md_doc_statuscodes.html
 using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan;
+
+extern Config config;
 
 /**
  * Database RPC endpoint (which the server exports on a particular port)
