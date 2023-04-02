@@ -20,6 +20,7 @@
 #include <thread>
 #include <vector>
 
+#include "../Utility.cpp"
 #include "./RPCWrapperCall.h"
 #include "Consensus.h"
 #include "Database.h"

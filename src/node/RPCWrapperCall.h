@@ -20,6 +20,7 @@
 #include <termcolor/termcolor.hpp>
 #include <vector>
 
+#include "../Utility.cpp"
 #include "consensusInterface.grpc.pb.h"
 #include "databaseInterface.grpc.pb.h"
 
@@ -59,7 +60,7 @@ class ConsensusRPCWrapperCall {
   std::string propose(const std::string&);
   std::string accept(const std::string&);
   std::string success(const std::string&);
-  std::string heartbeat(const std::string&);
+  std::string ping(const std::string&);
 
  private:
   std::unique_ptr<consensusInterface::ConsensusService::Stub> stub;

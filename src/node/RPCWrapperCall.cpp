@@ -56,8 +56,8 @@ std::string ConsensusRPCWrapperCall::success(const std::string& s) {
   return "default";
 }
 
-std::string ConsensusRPCWrapperCall::heartbeat(const std::string& s) {
-  std::cout << yellow << "ConsensusRPCWrapperCall::heartbeat" << reset << std::endl;
+std::string ConsensusRPCWrapperCall::ping(const std::string& s) {
+  std::cout << TIME << yellow << "ConsensusRPCWrapperCall::ping" << reset << std::endl;
 
   grpc::ClientContext context;
   consensusInterface::Request request;
@@ -65,7 +65,7 @@ std::string ConsensusRPCWrapperCall::heartbeat(const std::string& s) {
 
   request.set_value(s);
 
-  grpc::Status status = this->stub->heartbeat(&context, request, &response);
+  grpc::Status status = this->stub->ping(&context, request, &response);
 
   return (status.ok()) ? "OK" : "RPC failed !";
 }

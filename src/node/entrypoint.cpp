@@ -57,7 +57,6 @@ void run_gRPC_server(std::string address) {
   builder.RegisterService(&service);
   // Finally assemble the server.
   std::unique_ptr<Server> server(builder.BuildAndStart());
-  std::cout << termcolor::blue << "⚡ Server listening on " << address << termcolor::reset << std::endl;
 
   // Wait for the server to shutdown. Note that some other thread must be
   // responsible for shutting down the server for this call to ever return.
@@ -134,15 +133,6 @@ void parse_options(int argc, char** argv) {
 }
 
 void consensus_stub_rpc_setup() {
-  // {
-  //   // Transform each config into a address via make_address, inserting each object into the vector.
-  //   std::vector<Address> cluster;
-  //   std::transform(config.cluster.begin(), config.cluster.end(), std::back_inserter(cluster), make_address);
-
-  //   // Print nodes.
-  //   std::copy(cluster.begin(), cluster.end(), std::ostream_iterator<Address>(std::cout, "\n"));
-  // }
-
   if (!config.flag.leader)
     return;
 
@@ -153,13 +143,22 @@ void consensus_stub_rpc_setup() {
         .address = *it};
     Consensus::cluster.push_back(n);
   }
+
+  // {
+  //   // Transform each config into a address via make_address, inserting each object into the vector.
+  //   std::vector<Address> cluster;
+  //   std::transform(config.cluster.begin(), config.cluster.end(), std::back_inserter(cluster), make_address);
+
+  //   // Print nodes.
+  //   std::copy(cluster.begin(), cluster.end(), std::ostream_iterator<Address>(std::cout, "\n"));
+  // }
 }
 
 // TODO:
 void initiateConsensus() {
   sleep(5);
   for (Node n : Consensus::cluster) {
-    n.stub_consensus->heartbeat("message");
+    n.stub_consensus->ping("message");
   }
 }
 
@@ -174,8 +173,10 @@ int main(int argc, char* argv[]) {
     fs::create_directories(fs::absolute(config.database_directory));
   }
 
-  std::thread t1(runDBServer, Address{"0.0.0.0", boost::lexical_cast<unsigned short>(config.port_database)});
-  std::thread t2(runConsensusServer, Address{"0.0.0.0", boost::lexical_cast<unsigned short>(config.port_consensus)});
+  Address a1 = config.getAddress<app::Service::Consensus>(), a2 = config.getAddress<app::Service::Database>();
+  std::thread t2(runConsensusServer, a1);
+  std::thread t1(runDBServer, a2);
+  std::cout << termcolor::blue << "⚡ Consensus service: " << a1.address + ":" + std::to_string(a1.port) << " | Database service: " << a2.address + ":" + std::to_string(a2.port) << termcolor::reset << std::endl;
   std::thread t3(initiateConsensus);
 
   consensus_stub_rpc_setup();

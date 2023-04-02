@@ -6,7 +6,7 @@ service ConsensusService {
   rpc propose(Request) returns (Response) {};
   rpc accept(Request) returns (Response) {};
   rpc success(Request) returns (Response) {};
-  rpc heartbeat(Request) returns (Response) {};
+  rpc ping(Request) returns (Response) {};
 }
 
 enum Operation {

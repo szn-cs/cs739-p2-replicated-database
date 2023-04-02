@@ -106,18 +106,16 @@ Status ConsensusRPC::success(ServerContext* context, const consensusInterface::R
   return Status::OK;
 }
 
-Status ConsensusRPC::heartbeat(ServerContext* context, const consensusInterface::Request* request, consensusInterface::Response* response) {
-  std::cout << yellow << "ConsensusRPC::heartbeat" << reset << std::endl;
+Status ConsensusRPC::ping(ServerContext* context, const consensusInterface::Request* request, consensusInterface::Response* response) {
+  std::cout << TIME << yellow << "ConsensusRPC::ping" << reset << std::endl;
 
-  cout << "recieved heartbeat from: " << endl;
+  cout << "recieved ping from: " << endl;
 
   return Status::OK;
 }
 
 // Methods for adding to log at different points during paxos algorithm
-
 // when Acceptor receives a proposal for particular key and round
-
 void Consensus::Set_Log(const string& key, int round) {
   pthread_mutex_lock(&log_mutex);
   pax_log[key][round];
@@ -125,7 +123,6 @@ void Consensus::Set_Log(const string& key, int round) {
 }
 
 // update proposal server
-
 void Consensus::Set_Log(const string& key, int round, int p_server) {
   pthread_mutex_lock(&log_mutex);
   pax_log[key][round].set_p_server_id(p_server);
@@ -133,7 +130,6 @@ void Consensus::Set_Log(const string& key, int round, int p_server) {
 }
 
 // Update the acceptance info for the given key and round.
-
 void Consensus::Set_Log(const string& key, int round, int a_server, databaseInterface::Operation op, string value) {
   pthread_mutex_lock(&log_mutex);
   pax_log[key][round].set_a_server_id(a_server);

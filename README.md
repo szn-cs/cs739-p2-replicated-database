@@ -18,3 +18,5 @@
   - [example C++] <https://github.com/jiahanzhu/PaxosKVStore>
   - [example Go] <https://github.com/kkdai/paxos> <https://github.com/xiang90/paxos> <https://github.com/kr/paxos> 
   - Jepsen consistency testing for distributed system (e.g. check linearizability)
+  - <https://github.com/dgryski/awesome-consensus>
+  - [example] <https://www.youtube.com/watch?v=odZ2znr7D1o>

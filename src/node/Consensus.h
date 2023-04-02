@@ -43,7 +43,7 @@ class ConsensusRPC : public consensusInterface::ConsensusService::Service {
   grpc::Status propose(ServerContext*, const consensusInterface::Request*, consensusInterface::Response*) override;
   grpc::Status accept(ServerContext*, const consensusInterface::Request*, consensusInterface::Response*) override;
   grpc::Status success(ServerContext*, const consensusInterface::Request*, consensusInterface::Response*) override;
-  grpc::Status heartbeat(ServerContext*, const consensusInterface::Request*, consensusInterface::Response*) override;
+  grpc::Status ping(ServerContext*, const consensusInterface::Request*, consensusInterface::Response*) override;
 };
 
 struct Node {
