@@ -27,39 +27,92 @@ void run_gRPC_server(std::string address) {
 auto runConsensusServer = [](std::string address) { run_gRPC_server<DatabaseRPC>(address); };
 auto runDBServer = [](std::string address) { run_gRPC_server<ConsensusRPC>(address); };
 
-/**
- * Handle following configuration parameters: 
- * 1. debug flag
- * RPC export info:
- * 2. consensus RPC port
- * 3. database RPC port
- * Quorum settings: 
- * 4. replicas consensus RPC addresses
- * Fail configs: 
- * 5. fail rate, etc.
-*/
-int main(int argc, char** argv) {
+void on_age(int age) {
+  std::cout << "On age: " << age << '\n';
+}
+
+int main(int argc, char* argv[]) {
   struct stat info;
+  std::filesystem::path executablePath;
 
-  // set defaults
-  const std::string address_consensus("0.0.0.0:8080");
-  const std::string address_db("0.0.0.0:8081");
+  {
+    namespace fs = boost::filesystem;
+    fs::path full_path(fs::initial_path<fs::path>());
+    full_path = fs::system_complete(fs::path(argv[0]));
+    executablePath = full_path.parent_path().string();
+  }
 
-  serverDirectory = Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server");
+  struct {                                      // Declare options that will be allowed both on command line and in config file
+    std::string port_database, port_consensus;  // RPC expotred ports
+    std::vector<std::string> cluster;           // addresses of nodes in cluster
+    std::string database_directory;             // directory of database data
+    bool debug;                                 // debug flag
 
-  // TODO: debug flag: debugging outputs, DB configuration modes.
+    // TODO: fail rate, and testing configs
+  } config;
 
-  // set configs from arguments
-  if (argc == 2)
-    serverDirectory = argv[1];
+  boost::program_options::variables_map variables;
 
-  // create directory if doesn't exist
-  serverDirectory = fs::absolute(serverDirectory);
-  fs::create_directories(serverDirectory);
-  std::cout << blue << "serverDirectory: " << serverDirectory << reset << std::endl;
+  {
+    namespace po = boost::program_options;  // boost https://www.boost.org/doc/libs/1_81_0/doc/html/po.html
 
-  std::thread consensus(runDBServer, address_consensus);
-  std::thread db(runConsensusServer, address_db);
+    try {
+      po::options_description cmd_options;
+      po::options_description file_options;
+
+      { /** define program options schema */
+        po::options_description generic("Generic options");
+        po::options_description primary("Main program options");
+
+        generic.add_options()("help,h", "CMD options list");
+        generic.add_options()("config,c", po::value<std::string>()->default_value(Utility::concatenatePath(executablePath, "./node.config")), "configuration file");
+        primary.add_options()("port_database,p", po::value<std::string>(&config.port_database)->default_value("8080"), "Port of database RPC service");
+        primary.add_options()("port_consensus", po::value<std::string>(&config.port_consensus)->default_value("8081"), "Port of consensus RPC service");
+        primary.add_options()("address,a", po::value<std::vector<std::string>>(&config.cluster)->multitoken(), "Addresses (incl. ports) of consensus cluster participants");
+        primary.add_options()("database_directory,d", po::value<std::string>(&config.database_directory)->default_value(Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server")), "Directory of database data");
+        primary.add_options()("debug,g", po::bool_switch(&config.debug)->default_value(false), "Debug flag");
+
+        cmd_options.add(generic).add(primary);  // set options allowed on command line
+        file_options.add(primary);              // set options allowed in config file
+      }
+
+      // po::variables_map variables;
+      { /** parse & set options from different sources */
+        // po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::store(po::command_line_parser(argc, argv).options(cmd_options).run(), variables);
+
+        // read from configuration file
+        auto config_file = variables.at("config").as<std::string>();
+        std::ifstream ifs(config_file.c_str());
+        if (!ifs)
+          throw std::runtime_error("can not open configuration file: " + config_file);
+        po::store(po::parse_config_file(ifs, config_file), variables);
+        po::notify(variables);
+      }
+
+      if (variables.count("help")) {
+        std::cout << "Distributed Replicated Database\n"
+                  << cmd_options << '\n'
+                  << endl;
+        exit(0);
+      }
+
+    } catch (const po::error& ex) {
+      std::cerr << ex.what() << '\n';
+      exit(1);
+    }
+  }
+
+  {
+    // TODO: handle database directory
+    // create database direcotry directory if doesn't exist
+    fs::create_directories(fs::absolute(config.database_directory));
+  }
+
+  // TODO: export config globally
+
+  std::thread consensus(runDBServer, "0.0.0.0:" + config.port_database);
+  std::thread db(runConsensusServer, "0.0.0.0:" + config.port_consensus);
 
   db.join();
   consensus.join();

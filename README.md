@@ -17,3 +17,4 @@
   - A good summary of the protocol with some psuedo code: <https://martinfowler.com/articles/patterns-of-distributed-systems/paxos.html/>
   - [example C++] <https://github.com/jiahanzhu/PaxosKVStore>
   - [example Go] <https://github.com/kkdai/paxos> <https://github.com/xiang90/paxos> <https://github.com/kr/paxos> 
+  - Jepsen consistency testing for distributed system (e.g. check linearizability)

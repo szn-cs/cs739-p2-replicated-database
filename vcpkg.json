@@ -3,6 +3,10 @@
   "dependencies": [
     "grpc", 
     "termcolor", 
-    "boost-program-options"
-  ]
+    {
+      "name": "boost",
+      "version>=": "1.81.0"
+    }
+  ], 
+  "builtin-baseline": "b81bc3a83fdbdffe80325eeabb2ec735a1f3c29d"
 }
