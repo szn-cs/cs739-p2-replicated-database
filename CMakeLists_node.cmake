@@ -4,6 +4,7 @@ set(SERVER_SRC
   ${SOURCE_FOLDER}/node/Consensus.cpp
   ${SOURCE_FOLDER}/node/Database.cpp
   ${SOURCE_FOLDER}/node/RPCWrapperCall.cpp
+  ${SOURCE_FOLDER}/utility.cc
 )
 set(SERVER_BINARY_NAME 
   node

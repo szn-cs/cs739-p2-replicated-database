@@ -57,7 +57,7 @@ std::string ConsensusRPCWrapperCall::success(const std::string& s) {
 }
 
 std::string ConsensusRPCWrapperCall::ping(const std::string& s) {
-  std::cout << TIME << yellow << "ConsensusRPCWrapperCall::ping" << reset << std::endl;
+  std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPCWrapperCall::ping" << reset << std::endl;
 
   grpc::ClientContext context;
   consensusInterface::Request request;

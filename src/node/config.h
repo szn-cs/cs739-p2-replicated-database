@@ -1,27 +1,63 @@
 /** config.h defins the configuration options exposed to the program */
 #pragma once
 
-#include <boost/asio.hpp>
-#include <string>
-#include <vector>
-
-namespace app {
-enum class Service {
-  Database,
-  Consensus
-};
-}
+#include "../include.h"
+#include "./RPCWrapperCall.h"
 
 /// @brief Address type that contains an address and port.
 struct Address {
   std::string address;
   unsigned short port;
 
+  std::string getAddress() {
+    return this->address + ":" + std::to_string(this->port);
+  }
+
   /// @brief Constructor.
   Address(std::string address, unsigned short port)
       : address(address),
         port(port) {}
 };
+
+namespace app {
+
+enum class Service {
+  Database,
+  Consensus
+};
+
+template <typename S>
+struct Endpoint {
+  Endpoint(std::string a) : address(a) {
+    // this->stub = new ConsensusRPCWrapperCall(grpc::CreateChannel(a, grpc::InsecureChannelCredentials()));
+  }
+
+  std::string address;
+  std::unique_ptr<S> stub;
+};
+
+class Node {
+ public:
+  Node(std::string consensusAddress);
+  Node(std::string consensusAddress, std::string databaseAddress);
+  Node(Address consensus, Address database);
+
+  //  private:
+  //   Endpoint<consensusInterface::ConsensusService::Stub> consensusEndpoint;
+  //   Endpoint<databaseInterface::DatabaseService::Stub> databaseEndpoint;
+};
+
+class Cluster {
+ public:
+  Cluster(std::vector<std::string> addressList);
+  // void getLeader();  // return tuple(bool, Node)
+
+ public:
+  std::vector<Node> memberList;  // addresses of nodes in cluster
+  // Option option;
+};
+
+}  // namespace app
 
 /**
  * Configuration info

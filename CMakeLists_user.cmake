@@ -2,6 +2,7 @@
 set(CLIENT_SRC 
   ${SOURCE_FOLDER}/user/entrypoint.cpp
   ${SOURCE_FOLDER}/node/RPCWrapperCall.cpp
+  ${SOURCE_FOLDER}/utility.cc
 )
 set(CLIENT_BINARY_NAME 
   user

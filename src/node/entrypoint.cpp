@@ -2,9 +2,6 @@
 
 Config config;
 
-static std::unordered_map<std::string, int> serverclock;
-static std::string serverDirectory;
-
 /// @brief Convenience function for when a 'store_to' value is being provided to typed_value.
 ///
 /// @param store_to The variable that will hold the parsed value upon notify.
@@ -47,7 +44,7 @@ Address make_address(const std::string& address_and_port) {
  * https://download.cosine.nl/gvacanti/parsing_configuration_files_c++_CVu265.pdf
  * 
 */
-void parse_options(int argc, char** argv) {
+void parse_options(int argc, char** argv, Config& config) {
   namespace po = boost::program_options;  // boost https://www.boost.org/doc/libs/1_81_0/doc/html/po.html
   namespace fs = boost::filesystem;
 
@@ -68,10 +65,10 @@ void parse_options(int argc, char** argv) {
       po::options_description primary("Main program options");
 
       generic.add_options()("help,h", "CMD options list");
-      generic.add_options()("config,c", po::value<std::string>()->default_value(Utility::concatenatePath(executablePath, "./node.ini")), "configuration file");
+      generic.add_options()("config,c", po::value<std::string>()->default_value(utility::concatenatePath(executablePath, "./node.ini")), "configuration file");
       primary.add_options()("port_database", po::value<unsigned short>(&config.port_database)->default_value(8090), "Port of database RPC service");
       primary.add_options()("port_consensus,p", po::value<unsigned short>(&config.port_consensus)->default_value(8080), "Port of consensus RPC service");
-      primary.add_options()("database_directory,d", po::value<std::string>(&config.database_directory)->default_value(Utility::concatenatePath(fs::current_path().generic_string(), "tmp/server")), "Directory of database data");
+      primary.add_options()("database_directory,d", po::value<std::string>(&config.database_directory)->default_value(utility::concatenatePath(fs::current_path().generic_string(), "tmp/server")), "Directory of database data");
       primary.add_options()("cluster.address,a", make_value(&config.cluster), "Addresses (incl. ports) of consensus cluster participants <address:port>");
       primary.add_options()("flag.debug,g", po::bool_switch(&config.flag.debug)->default_value(false), "Debug flag");
       primary.add_options()("flag.leader", po::bool_switch(&config.flag.leader)->default_value(false), "testing: leader flag");
@@ -116,6 +113,7 @@ void parse_options(int argc, char** argv) {
 
 template <typename S>
 void run_gRPC_server(std::string address) {
+  cout << termcolor::grey << utility::getClockTime() << termcolor::reset << endl;
   S service;
 
   grpc::EnableDefaultHealthCheckService(true);
@@ -144,7 +142,7 @@ int main(int argc, char* argv[]) {
   struct stat info;
 
   // parse options from different sources
-  parse_options(argc, argv);
+  parse_options(argc, argv, config);
 
   // handle database directory TODO:
   fs::create_directories(fs::absolute(config.database_directory));  // create database direcotry directory if doesn't exist
@@ -163,5 +161,6 @@ int main(int argc, char* argv[]) {
   t2.join();
   t3.join();
 
+  cout << termcolor::grey << utility::getClockTime() << termcolor::reset << endl;
   return 0;
 }

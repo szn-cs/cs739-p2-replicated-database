@@ -1,9 +1,5 @@
 #include "Consensus.h"
 
-#include <math.h>
-
-using namespace std;
-
 // string id;
 
 // paxos_addresses_ : a list of network addresses of the Paxos servers , IP addresses and ports
@@ -107,15 +103,15 @@ Status ConsensusRPC::success(ServerContext* context, const consensusInterface::R
 }
 
 Status ConsensusRPC::ping(ServerContext* context, const consensusInterface::Request* request, consensusInterface::Response* response) {
-  std::cout << TIME << yellow << "ConsensusRPC::ping" << reset << std::endl;
+  std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::ping" << reset << std::endl;
 
   cout << "recieved ping from: " << endl;
 
   return Status::OK;
 }
 
-Status ConsensusRPC::get_leader(ServerContext* context, const consensusInterface::Empty* request, consensusInterface::GetLeaderResponse* response){
-  std::cout << TIME << yellow << "ConsensusRPC::get_leader" << reset << std::endl;
+Status ConsensusRPC::get_leader(ServerContext* context, const consensusInterface::Empty* request, consensusInterface::GetLeaderResponse* response) {
+  std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::get_leader" << reset << std::endl;
 
   string leader = Consensus::GetLeader();
   // TODO: Error handling?
@@ -148,11 +144,12 @@ void Consensus::Set_Log(const string& key, int round, int a_server, databaseInte
 }
 
 map<string, map<int, databaseInterface::LogEntry>> Consensus::Get_Log() {
+  map<string, map<int, databaseInterface::LogEntry>> c;
+  return c;
 }
 
 // Find the highest proposal number seen for the given key
-pair<string, int>
-Consensus::Find_Max_Proposal(const string& key, int round) {
+pair<string, int> Consensus::Find_Max_Proposal(const string& key, int round) {
   map<string, map<int, databaseInterface::LogEntry>> pax_log = Consensus::Get_Log();
 
   //pthread_mutex_lock(&log_mutex);
@@ -184,7 +181,7 @@ void Consensus::writeToDisk(string path, string value) {
   file2.close();
 }
 
-std::string Consensus::GetLeader(){
+std::string Consensus::GetLeader() {
   // Threadsafe read of leader address
   pthread_mutex_lock(&leader_mutex);
   std::string leader = leader_;

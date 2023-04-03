@@ -1,14 +1,10 @@
-#pragma once
-#include <iostream>
-
-#include "../Utility.cpp"
+#include "../include.h"
 #include "../node/RPCWrapperCall.h"
+#include "../utility.h"
 
-namespace fs = std::filesystem;
-using namespace std;
-using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan;
+namespace user {
 
-
+};
 
 /**
  * Handle configurations: 
@@ -27,4 +23,3 @@ int main(int argc, char* argv[]) {
 
   return r;
 }
-
