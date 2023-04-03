@@ -1,5 +1,4 @@
 #include "../include.h"
-#include "../utility.h"
 
 Config config;
 

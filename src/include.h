@@ -61,28 +61,6 @@ struct Address {
         port(port) {}
 };
 
-struct utility {
-  // construct a relative path
-  static std::string constructRelativePath(std::string path, std::string rootPath);
-  static std::string concatenatePath(std::string base, std::string path);
-
-  /** 
- * retrive machine's physical time using different units
- * https://stackoverflow.com/questions/21856025/getting-an-accurate-execution-time-in-c-micro-seconds
- * https://stackoverflow.com/questions/6734375/get-current-time-in-milliseconds-using-c-and-boost
-*/
-  static std::string getClockTime();
-};
-
-template <typename T>
-boost::program_options::typed_value<T>* make_value(T* store_to);
-
-std::ostream& operator<<(std::ostream& stream, const Address& n);
-
-Address make_address(const std::string& address_and_port);
-
-void parse_options(int argc, char** argv, Config& config);
-
 namespace parse {
 
 }  // namespace parse
@@ -188,6 +166,28 @@ struct Config {  // Declare options that will be allowed both on command line an
 
   Config() : ip(Config::getLocalIP()){};
 };
+
+struct utility {
+  // construct a relative path
+  static std::string constructRelativePath(std::string path, std::string rootPath);
+  static std::string concatenatePath(std::string base, std::string path);
+
+  /** 
+ * retrive machine's physical time using different units
+ * https://stackoverflow.com/questions/21856025/getting-an-accurate-execution-time-in-c-micro-seconds
+ * https://stackoverflow.com/questions/6734375/get-current-time-in-milliseconds-using-c-and-boost
+*/
+  static std::string getClockTime();
+};
+
+template <typename T>
+boost::program_options::typed_value<T>* make_value(T* store_to);
+
+std::ostream& operator<<(std::ostream& stream, const Address& n);
+
+Address make_address(const std::string& address_and_port);
+
+void parse_options(int argc, char** argv, Config& config);
 
 /**
  * Database RPC endpoint (which the server exports on a particular port)
