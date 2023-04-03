@@ -1,4 +1,7 @@
-#include "Consensus.h"
+#include "../include.h"
+#include "../utility.h"
+
+extern Config config;
 
 // string id;
 

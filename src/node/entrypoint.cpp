@@ -1,7 +1,5 @@
 #include "../include.h"
 #include "../utility.h"
-#include "Consensus.h"
-#include "config.h"
 
 Config config;
 
