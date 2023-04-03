@@ -3,6 +3,14 @@
 Status DatabaseRPC::get(ServerContext* context, const databaseInterface::Request* request, databaseInterface::Response* response) {
   std::cout << yellow << "DatabaseRPC::get" << reset << std::endl;
 
+  // TODO: We need to share the map of stubs with both the consensus thread and the db thread, so that the db thread can communicate
+  // with other db threads. Idk the best way to do that given our current code setup, i.e. not using constructors for the most part.
+
+  // Check if we are leader by asking consensus thread or by referencing a shared data structure, if we so choose
+  // If so, return Database::GetKV(request->s())
+
+  // If not, contact the db stub of the leader, corresponding to the result of asking the consensus thread for the leader's address
+
   response->set_m("server recieved message: " + request->s());
   return Status::OK;
 }

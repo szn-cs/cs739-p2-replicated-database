@@ -8,7 +8,9 @@ using namespace std;
 
 // paxos_addresses_ : a list of network addresses of the Paxos servers , IP addresses and ports
 
-std::vector<Node> Consensus::cluster;
+std::map<std::string, Node> Consensus::cluster;
+std::string Consensus::leader_;
+pthread_mutex_t Consensus::leader_mutex;
 
 Status ConsensusRPC::propose(ServerContext* context, const consensusInterface::Request* request, consensusInterface::Response* response) {
   std::cout << yellow << "ConsensusRPC::propose" << reset << std::endl;
@@ -112,6 +114,15 @@ Status ConsensusRPC::ping(ServerContext* context, const consensusInterface::Requ
   return Status::OK;
 }
 
+Status ConsensusRPC::get_leader(ServerContext* context, const consensusInterface::Empty* request, consensusInterface::GetLeaderResponse* response){
+  std::cout << TIME << yellow << "ConsensusRPC::get_leader" << reset << std::endl;
+
+  string leader = Consensus::GetLeader();
+  // TODO: Error handling?
+  response->set_leader(leader);
+  return Status::OK;
+}
+
 // Methods for adding to log at different points during paxos algorithm
 // when Acceptor receives a proposal for particular key and round
 void Consensus::Set_Log(const string& key, int round) {
@@ -171,4 +182,12 @@ void Consensus::writeToDisk(string path, string value) {
   ofstream file2(path, std::ios::trunc);  // open the file for writing, truncate existing content
   file2 << value;                         // write the new content to the file
   file2.close();
+}
+
+std::string Consensus::GetLeader(){
+  // Threadsafe read of leader address
+  pthread_mutex_lock(&leader_mutex);
+  std::string leader = leader_;
+  pthread_mutex_unlock(&leader_mutex);
+  return leader;
 }

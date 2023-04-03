@@ -8,7 +8,7 @@ namespace fs = std::filesystem;
 using namespace std;
 using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan;
 
-namespace user {
+
 
 /**
  * Handle configurations: 
@@ -17,7 +17,7 @@ namespace user {
 */
 int main(int argc, char* argv[]) {
   int r = 0;
-  string db_address = "0.0.0.0:8081";  // target address & port to send grpc requests to.
+  string db_address = "127.0.1.1:8090";  // target address & port to send grpc requests to.
 
   DatabaseRPCWrapperCall* c = new DatabaseRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
 
@@ -28,4 +28,3 @@ int main(int argc, char* argv[]) {
   return r;
 }
 
-}  // namespace user

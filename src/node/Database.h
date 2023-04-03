@@ -62,11 +62,12 @@ class Database {
   // TODO: Lock for each entry to improve latency?
   map<string, string> kv_store;
   pthread_mutex_t data_mutex;
-  map<string, string> Get_DB();
+  
 
  public:
   // Get, set, and delete values in the kv store
   string Get_KV(const string& key);
   void Set_KV(const string& key, string& value);
   void Delete_KV(const string& key);
+  map<string, string> Get_DB();
 };
