@@ -2,7 +2,6 @@
 #pragma once
 
 #include "../include.h"
-#include "./RPCWrapperCall.h"
 
 /// @brief Address type that contains an address and port.
 struct Address {

@@ -1,4 +1,9 @@
-#include "Database.h"
+#include "../include.h"
+#include "../utility.h"
+#include "Consensus.h"
+#include "config.h"
+
+extern Config config;
 
 Status DatabaseRPC::get(ServerContext* context, const databaseInterface::Request* request, databaseInterface::Response* response) {
   std::cout << yellow << "DatabaseRPC::get" << reset << std::endl;

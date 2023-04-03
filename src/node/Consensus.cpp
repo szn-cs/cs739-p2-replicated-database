@@ -8,6 +8,34 @@ std::map<std::string, Node> Consensus::cluster;
 std::string Consensus::leader_;
 pthread_mutex_t Consensus::leader_mutex;
 
+void Consensus::consensus_stub_rpc_setup() {
+  if (!config.flag.leader)
+    return;
+
+  for (auto it = config.cluster.begin(); it != config.cluster.end(); ++it) {
+    Node n = {
+        .stub_consensus = new ConsensusRPCWrapperCall(grpc::CreateChannel(*it, grpc::InsecureChannelCredentials())),
+        .stub_database = new DatabaseRPCWrapperCall(grpc::CreateChannel(*it, grpc::InsecureChannelCredentials()))};
+
+    cluster[*it] = n;
+  }
+
+  // {
+  //   // Transform each config into a address via make_address, inserting each object into the vector.
+  //   std::vector<Address> cluster;
+  //   std::transform(config.cluster.begin(), config.cluster.end(), std::back_inserter(cluster), make_address);
+
+  //   // Print nodes.
+  //   std::copy(cluster.begin(), cluster.end(), std::ostream_iterator<Address>(std::cout, "\n"));
+  // }
+}
+
+void Consensus::initializeProtocol() {
+  sleep(5);
+  for (auto& n : cluster) {
+    n.second.stub_consensus->ping("message");
+  }
+}
 Status ConsensusRPC::propose(ServerContext* context, const consensusInterface::Request* request, consensusInterface::Response* response) {
   std::cout << yellow << "ConsensusRPC::propose" << reset << std::endl;
 

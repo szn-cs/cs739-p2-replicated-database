@@ -2,8 +2,6 @@
 
 #include "../include.h"
 #include "../utility.h"
-#include "./Database.h"
-#include "./RPCWrapperCall.h"
 #include "./config.h"
 
 extern Config config;
@@ -33,37 +31,12 @@ class Consensus {
   /**
      * send RPC pings to all cluster nodes
     */
-  static void initializeProtocol() {
-    sleep(5);
-    for (auto& n : cluster) {
-      n.second.stub_consensus->ping("message");
-    }
-  }
+  static void initializeProtocol();
 
   /** 
      * create stub instances for each of the cluster nodes.
     */
-  static void consensus_stub_rpc_setup() {
-    if (!config.flag.leader)
-      return;
-
-    for (auto it = config.cluster.begin(); it != config.cluster.end(); ++it) {
-      Node n = {
-          .stub_consensus = new ConsensusRPCWrapperCall(grpc::CreateChannel(*it, grpc::InsecureChannelCredentials())),
-          .stub_database = new DatabaseRPCWrapperCall(grpc::CreateChannel(*it, grpc::InsecureChannelCredentials()))};
-
-      cluster[*it] = n;
-    }
-
-    // {
-    //   // Transform each config into a address via make_address, inserting each object into the vector.
-    //   std::vector<Address> cluster;
-    //   std::transform(config.cluster.begin(), config.cluster.end(), std::back_inserter(cluster), make_address);
-
-    //   // Print nodes.
-    //   std::copy(cluster.begin(), cluster.end(), std::ostream_iterator<Address>(std::cout, "\n"));
-    // }
-  }
+  static void consensus_stub_rpc_setup();
 
   static map<string, map<int, databaseInterface::LogEntry>> Get_Log();  // Returns current log and db snapshots
 

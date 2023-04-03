@@ -1,5 +1,4 @@
 #include "../include.h"
-#include "../node/RPCWrapperCall.h"
 #include "../utility.h"
 
 namespace user {
