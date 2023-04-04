@@ -189,38 +189,6 @@ Address make_address(const std::string& address_and_port);
 
 void parse_options(int argc, char** argv, Config& config);
 
-/**
- * Database RPC endpoint (which the server exports on a particular port)
-*/
-class DatabaseRPC : public databaseInterface::DatabaseService::Service {
- public:
-  //  explicit DatabaseRPC() {
-  //         pthread_mutex_init(&lock, NULL);
-  //     }
-
-  grpc::Status get(grpc::ServerContext*, const databaseInterface::Request*, databaseInterface::Response*) override;
-  grpc::Status set(grpc::ServerContext*, const databaseInterface::Request*, databaseInterface::Response*) override;
-  // // This just returns the current log and db snapshot to the Consensus thread, to be forwarded to a recovering replica
-  // // This would only come from other servers
-  // grpc::Status recovery(grpc::ServerContext*, const databaseInterface::RecoveryRequest*, databaseInterface::Recoveryresponse*) override;
-};
-
-/**
- * Represents the State Machine (where KV store that keeps the data in memory or persistent)
-*/
-class Database {
- private:
-  // TODO: Lock for each entry to improve latency?
-  map<string, string> kv_store;
-  pthread_mutex_t data_mutex;
-
- public:
-  // Get, set, and delete values in the kv store
-  string Get_KV(const string& key);
-  void Set_KV(const string& key, string& value);
-  void Delete_KV(const string& key);
-  map<string, string> Get_DB();
-};
 
 /** 
  * Database
@@ -232,7 +200,7 @@ class DatabaseRPCWrapperCall {
 
   /** database calls*/
   std::string get(const std::string&);
-  std::string set(const std::string&);
+  std::string set(const std::string&, const std::string&);
 
  private:
   std::unique_ptr<databaseInterface::DatabaseService::Stub> stub;
@@ -251,10 +219,45 @@ class ConsensusRPCWrapperCall {
   std::string accept(const std::string&);
   std::string success(const std::string&);
   std::string ping(const std::string&);
+  std::string get_leader();
 
  private:
   std::unique_ptr<consensusInterface::ConsensusService::Stub> stub;
 };
+
+/**
+ * Database RPC endpoint (which the server exports on a particular port)
+*/
+class DatabaseRPC : public databaseInterface::DatabaseService::Service {
+ public:
+  //  explicit DatabaseRPC() {
+  //         pthread_mutex_init(&lock, NULL);
+  //     }
+  static ConsensusRPCWrapperCall* c;
+
+  grpc::Status get(grpc::ServerContext*, const databaseInterface::GetRequest*, databaseInterface::GetResponse*) override;
+  grpc::Status set(grpc::ServerContext*, const databaseInterface::SetRequest*, databaseInterface::Empty*) override;
+  // // This just returns the current log and db snapshot to the Consensus thread, to be forwarded to a recovering replica
+  // // This would only come from other servers
+  // grpc::Status recovery(grpc::ServerContext*, const databaseInterface::RecoveryRequest*, databaseInterface::Recoveryresponse*) override;
+};
+
+/**
+ * Represents the State Machine (where KV store that keeps the data in memory or persistent)
+*/
+class Database {
+ public:
+  // TODO: Lock for each entry to improve latency?
+  static map<string, string> kv_store;
+  static pthread_mutex_t data_mutex;
+
+  // Get, set, and delete values in the kv store
+  static std::pair<std::string, int> Get_KV(const string& key);
+  static void Set_KV(const string& key, const string& value);
+  static void Delete_KV(const string& key);
+  static map<string, string> Get_DB();
+};
+
 
 /**
  * Consensus RPC endpoint (which the server exposes through a specific port)

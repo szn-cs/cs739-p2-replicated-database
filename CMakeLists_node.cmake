@@ -35,7 +35,7 @@ target_link_libraries(${SERVER_BINARY_NAME}
 target_include_directories(${SERVER_BINARY_NAME} PRIVATE ${TERMCOLOR_INCLUDE_DIRS})
 
 
-target_compile_options(${SERVER_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
+target_compile_options(${SERVER_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -g -Wextra -Wzero-as-null-pointer-constant -Wno-unused -Wno-unused-parameter)
 target_compile_options(${SERVER_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -D_FILE_OFFSET_BITS=64>)
 # optimized: 
 # target_compile_options(${SERVER_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -O3 -Wall -Wextra -Wno-unused -Wno-unused-parameter)

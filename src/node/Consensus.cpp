@@ -7,7 +7,10 @@ extern Config config;
 // paxos_addresses_ : a list of network addresses of the Paxos servers , IP addresses and ports
 
 std::map<std::string, Node> Consensus::cluster;
-std::string Consensus::leader_;
+
+// TODO: Don't hardcode leader, this is temporary for testing the flow of a get request coming
+// from db thread. This should be found when protocol starts or whatever
+std::string Consensus::leader_ = config.getLocalIP();
 pthread_mutex_t Consensus::leader_mutex;
 
 void Consensus::consensus_stub_rpc_setup() {

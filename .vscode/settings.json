@@ -189,6 +189,10 @@
 		"variant": "cpp",
 		"numbers": "cpp",
 		"*.inc": "cpp",
-		"semaphore": "cpp"
+		"semaphore": "cpp",
+		"barrier": "cpp",
+		"cuchar": "cpp",
+		"latch": "cpp",
+		"syncstream": "cpp"
 	}
 }

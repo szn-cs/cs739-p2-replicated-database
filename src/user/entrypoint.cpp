@@ -15,7 +15,10 @@ int main(int argc, char* argv[]) {
 
   DatabaseRPCWrapperCall* c = new DatabaseRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
 
-  string message = c->get("Hello message");
+
+  c->set("1", "1");
+
+  string message = c->get("1");
 
   std::cout << message << std::endl;
 
