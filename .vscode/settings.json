@@ -92,6 +92,7 @@
 	},
 	"peacock.remoteColor": "#a15fc6",
 	"files.associations": {
+		"*.rmd": "markdown",
 		"*.config.json": "jsonc",
 		"*.jlex": "lex",
 		"array": "cpp",
@@ -193,6 +194,7 @@
 		"barrier": "cpp",
 		"cuchar": "cpp",
 		"latch": "cpp",
-		"syncstream": "cpp"
+		"syncstream": "cpp",
+		"__node_handle": "cpp"
 	}
 }
