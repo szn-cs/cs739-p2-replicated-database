@@ -142,7 +142,7 @@ namespace utility::parse {
     std::string address;
     unsigned short port;
 
-    std::string getAddress() {
+    std::string toString() {
       return this->address + ":" + std::to_string(this->port);
     }
 
@@ -289,21 +289,23 @@ namespace app {
     Node(std::string consensusAddress) : consensusEndpoint(Endpoint<rpc::call::ConsensusRPCWrapperCall>(consensusAddress)){};
     Node(std::string consensusAddress, std::string databaseAddress) : consensusEndpoint(Endpoint<rpc::call::ConsensusRPCWrapperCall>(consensusAddress)),
                                                                       databaseEndpoint(Endpoint<rpc::call::DatabaseRPCWrapperCall>(databaseAddress)){};
-    Node(utility::parse::Address consensus, utility::parse::Address database) : Node(consensus.getAddress(), database.getAddress()){};
+    Node(utility::parse::Address consensusAddress) : Node(consensusAddress.toString()){};
+    Node(utility::parse::Address consensus, utility::parse::Address database) : Node(consensus.toString(), database.toString()){};
 
     Endpoint<rpc::call::ConsensusRPCWrapperCall> consensusEndpoint;
     Endpoint<rpc::call::DatabaseRPCWrapperCall> databaseEndpoint;
   };
 
   struct Cluster {
-    static std::shared_ptr<std::map<std::string, std::unique_ptr<Node>>> memberList;  // addresses of nodes in cluster
+    static std::shared_ptr<std::map<std::string, std::shared_ptr<Node>>> memberList;  // addresses of nodes in cluster
     static std::shared_ptr<utility::parse::Config> config;
+    static std::shared_ptr<Node> currentNode;  // current machine's Node object
 
     // static void getLeader();  // return tuple(bool, Node)
 
     // TODO: Don't hardcode leader, this is temporary for testing the flow of a get request coming
     // from db thread. This should be found when protocol starts or whatever
-    static std::string leader_;
+    static std::string leader;
     static pthread_mutex_t leader_mutex;
   };
 
@@ -320,9 +322,9 @@ namespace app {
     Consensus() = default;
 
     /** send RPC pings to all cluster nodes */
-    static void initializeProtocol();
+    static void broadcastPeriodicPing();
     /** create stub instances for each of the cluster nodes. */
-    static void consensus_stub_rpc_setup();
+    static void coordinate();
 
     map<string, map<int, database_interface::LogEntry>> Get_Log();  // Returns current log and db snapshots
     // Methods for adding to log at different points during paxos algorithm

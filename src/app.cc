@@ -5,18 +5,29 @@ namespace app {
   template class Endpoint<rpc::call::ConsensusRPCWrapperCall>;  // explicit initiation - prevent linker errors for separate dec & def of template
   template class Endpoint<rpc::call::DatabaseRPCWrapperCall>;   // explicit initiation - prevent linker errors for separate dec & def of template
 
-  std::shared_ptr<std::map<std::string, std::unique_ptr<Node>>> Cluster::memberList = nullptr;
+  std::shared_ptr<std::map<std::string, std::shared_ptr<Node>>> Cluster::memberList = nullptr;
   std::shared_ptr<utility::parse::Config> Cluster::config = nullptr;
+  std::shared_ptr<Node> Cluster::currentNode = nullptr;
 
   void initializeStaticInstance(std::vector<std::string> addressList, std::shared_ptr<utility::parse::Config> config) {
     Cluster::config = config;
 
-    Cluster::memberList = std::make_shared<std::map<std::string, std::unique_ptr<Node>>>();
-
+    Cluster::memberList = std::make_shared<std::map<std::string, std::shared_ptr<Node>>>();
     for (std::string& a : addressList)
-      Cluster::memberList->insert(std::make_pair(a, std::make_unique<Node>(a)));
+      Cluster::memberList->insert(std::make_pair(a, std::make_shared<Node>(a)));
 
-    Cluster::leader_ = config->ip;
+    // current node's details
+    utility::parse::Address addressConsensus = Cluster::config->getAddress<app::Service::Consensus>();  // addresses as IDs follow the consensus port
+    utility::parse::Address addressDatabase = Cluster::config->getAddress<app::Service::Database>();    // addresses as IDs follow the consensus port
+    auto iterator = Cluster::memberList->find(addressConsensus.toString());
+    if (iterator == Cluster::memberList->end()) {  // not found
+      Cluster::currentNode = std::make_shared<Node>(addressConsensus, addressDatabase);
+      Cluster::memberList->insert(std::make_pair(addressConsensus.toString(), Cluster::currentNode));
+    } else {
+      Cluster::currentNode = iterator->second;
+    }
+
+    Cluster::leader = "";
 
     if (config->flag.debug) {  // print list
       // std::map<std::string, std::unique_ptr<Node>>::iterator itr;
@@ -43,12 +54,12 @@ namespace app {
   // initialized in class instead.
   // std::shared_ptr<Consensus> Consensus::instance = nullptr;
 
-  void Consensus::consensus_stub_rpc_setup() {
+  void Consensus::coordinate() {
     // if (!Cluster::config.flag.leader)
     //   return;
   }
 
-  void Consensus::initializeProtocol() {
+  void Consensus::broadcastPeriodicPing() {
     // sleep(5);
     // for (auto& [key, node] : Cluster::memberList) {
     // node.consensusEndpoint.stub->ping("message");
@@ -121,7 +132,7 @@ namespace app {
     // TODO: This is not a proper usage of locks
     // Threadsafe read of leader address
     pthread_mutex_lock(&Cluster::leader_mutex);
-    std::string leader = Cluster::leader_;
+    std::string leader = Cluster::leader;
     pthread_mutex_unlock(&Cluster::leader_mutex);
     return leader;
   }
@@ -130,7 +141,7 @@ namespace app {
 
 namespace app {
 
-  std::string Cluster::leader_;
+  std::string Cluster::leader;
   pthread_mutex_t Cluster::leader_mutex;
 
   // initialized in class instead

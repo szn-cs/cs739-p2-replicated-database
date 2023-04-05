@@ -14,6 +14,9 @@ int main(int argc, char* argv[]) {
   boost::program_options::variables_map variables;
   utility::parse::parse_options<utility::parse::Mode::NODE>(argc, argv, config, variables);  // parse options from different sources
 
+  // Initialize Cluster data & Node instances
+  app::initializeStaticInstance(config->cluster, config);
+
   /** pick Mode of opeartion: either run distributed database or run the user testing part. */
   switch (config->mode) {
     case utility::parse::Mode::USER: {
@@ -27,9 +30,6 @@ int main(int argc, char* argv[]) {
       break;
   }
 
-  // Initialize Cluster data & Node instances
-  app::initializeStaticInstance(config->cluster, config);
-
   // handle database directory TODO:
   fs::create_directories(fs::absolute(config->database_directory));  // create database direcotry directory if doesn't exist
 
@@ -38,12 +38,12 @@ int main(int argc, char* argv[]) {
   std::thread t1(utility::server::run_gRPC_server<rpc::ConsensusRPC>, a1);
   utility::parse::Address a2 = config->getAddress<app::Service::Database>();
   std::thread t2(utility::server::run_gRPC_server<rpc::DatabaseRPC>, a2);
-  std::cout << termcolor::blue << "⚡ Consensus service: " << a1.address + ":" + std::to_string(a1.port) << " | Database service: " << a2.address + ":" + std::to_string(a2.port) << termcolor::reset << std::endl;
+  std::cout << termcolor::blue << "⚡ Consensus service: " << a1.toString() << " | Database service: " << a2.toString() << termcolor::reset << std::endl;
   // ping broadcasting thread (every randomly picked interval)
-  std::thread t3(app::Consensus::initializeProtocol);
+  std::thread t3(app::Consensus::broadcastPeriodicPing);
 
   // start cluster coordination
-  app::Consensus::consensus_stub_rpc_setup();
+  app::Consensus::coordinate();
 
   t1.join();
   t2.join();
