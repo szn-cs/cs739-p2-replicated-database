@@ -13,22 +13,22 @@ set(_GRPC_GRPCPP gRPC::grpc++)
 set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 
 # Proto file
-get_filename_component(hw_proto_consensus "${SOURCE_FOLDER}/consensusInterface.proto" ABSOLUTE)
+get_filename_component(hw_proto_consensus "${SOURCE_FOLDER}/consensus_interface.proto" ABSOLUTE)
 get_filename_component(hw_proto_path_consensus "${hw_proto_consensus}" PATH)
 # Generated sources
-set(hw_proto_srcs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.pb.cc")
-set(hw_proto_hdrs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.pb.h")
-set(hw_grpc_srcs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.grpc.pb.cc")
-set(hw_grpc_hdrs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.grpc.pb.h")
+set(hw_proto_srcs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensus_interface.pb.cc")
+set(hw_proto_hdrs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensus_interface.pb.h")
+set(hw_grpc_srcs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensus_interface.grpc.pb.cc")
+set(hw_grpc_hdrs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensus_interface.grpc.pb.h")
 
 # Proto file 
-get_filename_component(hw_proto_database "${SOURCE_FOLDER}/databaseInterface.proto" ABSOLUTE)
+get_filename_component(hw_proto_database "${SOURCE_FOLDER}/database_interface.proto" ABSOLUTE)
 get_filename_component(hw_proto_path_database "${hw_proto_database}" PATH)
 # Generated sources
-set(hw_proto_srcs_database "${CMAKE_CURRENT_BINARY_DIR}/databaseInterface.pb.cc")
-set(hw_proto_hdrs_database "${CMAKE_CURRENT_BINARY_DIR}/databaseInterface.pb.h")
-set(hw_grpc_srcs_database "${CMAKE_CURRENT_BINARY_DIR}/databaseInterface.grpc.pb.cc")
-set(hw_grpc_hdrs_database "${CMAKE_CURRENT_BINARY_DIR}/databaseInterface.grpc.pb.h")
+set(hw_proto_srcs_database "${CMAKE_CURRENT_BINARY_DIR}/database_interface.pb.cc")
+set(hw_proto_hdrs_database "${CMAKE_CURRENT_BINARY_DIR}/database_interface.pb.h")
+set(hw_grpc_srcs_database "${CMAKE_CURRENT_BINARY_DIR}/database_interface.grpc.pb.cc")
+set(hw_grpc_hdrs_database "${CMAKE_CURRENT_BINARY_DIR}/database_interface.grpc.pb.h")
 
 add_custom_command(
       OUTPUT 

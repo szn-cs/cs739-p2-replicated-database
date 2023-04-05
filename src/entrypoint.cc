@@ -61,11 +61,13 @@ int main(int argc, char* argv[]) {
 */
 int user_entrypoint(std::shared_ptr<utility::parse::Config> config) {
   int r = 0;
-  string db_address = "127.0.1.1:8090";  // target address & port to send grpc requests to.
+  string db_address = "127.0.1.1:9000";  // target address & port to send grpc requests to.
 
   rpc::call::DatabaseRPCWrapperCall* c = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
 
-  string message = c->get("Hello message");
+  c->set("1", "1");
+
+  string message = c->get("1");
 
   std::cout << message << std::endl;
 

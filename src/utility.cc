@@ -42,7 +42,7 @@ namespace utility {
       const auto now_as_time_t = std::chrono::system_clock::to_time_t(now);
       const auto now_us = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000000;
       output << std::put_time(std::localtime(&now_as_time_t), "%T")
-             << '.' << std::setfill('0') << std::setw(3) << now_us.count() << " μ=" << time_micro;
+             << '.' << std::setfill('0') << std::setw(3) << now_us.count() << " μ=" + time_micro.substr(10, time_micro.size()) + " ";
     }
 
     return output.str();
@@ -127,8 +127,8 @@ namespace utility::parse {
         generic.add_options()("config,c", po::value<std::string>()->default_value(utility::concatenatePath(executablePath, "./node.ini")), "Configuration file");
         generic.add_options()("mode,m", po::value<EnumOption<Mode>>(), "Mode of execution: either `node` or `user`");
 
-        primary.add_options()("port_database", po::value<unsigned short>(&config->port_database)->default_value(8090), "Port of database RPC service");
-        primary.add_options()("port_consensus,p", po::value<unsigned short>(&config->port_consensus)->default_value(8080), "Port of consensus RPC service");
+        primary.add_options()("port_database", po::value<unsigned short>(&config->port_database)->default_value(9000), "Port of database RPC service");
+        primary.add_options()("port_consensus,p", po::value<unsigned short>(&config->port_consensus)->default_value(8000), "Port of consensus RPC service");
         primary.add_options()("database_directory,d", po::value<std::string>(&config->database_directory)->default_value(utility::concatenatePath(fs::current_path().generic_string(), "tmp/server")), "Directory of database data");
         primary.add_options()("cluster.address,a", make_value<std::vector<std::string>>(&config->cluster), "Addresses (incl. ports) of consensus cluster participants <address:port>");
         primary.add_options()("flag.debug,g", po::bool_switch(&config->flag.debug)->default_value(false), "Debug flag");

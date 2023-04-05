@@ -1,5 +1,5 @@
 syntax = "proto3"; // we use proto version 3
-package consensusInterface;   // similar to namespace, avoid conflicts
+package consensus_interface;   // similar to namespace, avoid conflicts
 
 /** Paxos consensus **/
 service ConsensusService { 
