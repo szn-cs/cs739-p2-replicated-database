@@ -15,9 +15,6 @@ int main(int argc, char* argv[]) {
   utility::parse::parse_options<utility::parse::Mode::NODE>(argc, argv, config, variables);  // parse options from different sources
 
   /** pick Mode of opeartion: either run distributed database or run the user testing part. */
-  // for (utility::parse::Mode m : config->mode)
-  //   std::cout << m << std::endl;
-
   switch (config->mode) {
     case utility::parse::Mode::USER: {
       // additional parsing
@@ -56,11 +53,7 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-/**
- * Handle configurations: 
- * 1. service database RPC endpoints/addresses
- * 2. coordination settings for testing
-*/
+/** User execution for testing the RPC servers */
 int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::program_options::variables_map& variables) {
   // TODO: parse options for sending key value pair to address of cluster member for testing purposes through terminal.
 
@@ -69,8 +62,9 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
     auto target = variables.at("target").as<std::string>();
     auto key = variables.at("key").as<std::string>();
     auto value = variables.at("value").as<std::string>();
-    // get value, target and send rpc.
+
     std::cout << key + " " + value + " send to " + target << std::endl;
+    // TODO: create RPC requests to modify the database.
   }
 
   int r = 0;
