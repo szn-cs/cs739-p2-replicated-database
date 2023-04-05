@@ -57,13 +57,14 @@ int main(int argc, char* argv[]) {
 int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::program_options::variables_map& variables) {
   // TODO: parse options for sending key value pair to address of cluster member for testing purposes through terminal.
 
-  //   ./target/app --mode user --key k1 --value v1 --target 0.0.0.0:8002
-  if (variables.count("key")) {
+  //   ./target/app --mode user --command set --key k1 --value v1 --target 0.0.0.0:8002
+  if (variables.count("command")) {  // if command exists
     auto target = variables.at("target").as<std::string>();
+    auto command = variables.at("command").as<std::string>();
     auto key = variables.at("key").as<std::string>();
     auto value = variables.at("value").as<std::string>();
 
-    std::cout << key + " " + value + " send to " + target << std::endl;
+    std::cout << command + " " + key + " " + value + " send to " + target << std::endl;
     // TODO: create RPC requests to modify the database.
   }
 
