@@ -6,11 +6,11 @@
 test() {
   # terminal 1
   {
-    ./target/node
+    ./target/app --mode node
   }
   # terminal 2
   {
-    ./target/user
+    ./target/app --mode user
   }
 }
 
@@ -18,11 +18,11 @@ test_heartbeat() {
   source ./script/setenv.sh
   # SERVER_ADDRESS=c220g5-110912.wisc.cloudlab.us:50051
 
-  ./target/node -g --port_consensus 8080 &
-  ./target/node -g --port_consensus 8081 &
-  ./target/node -g --port_consensus 8082 --port_database 8091 &
-  ./target/node -g --port_consensus 8083 &
-  ./target/node -g --port_consensus 8084 --flag.leader &
+  ./target/app -g --port_consensus 8080 &
+  ./target/app -g --port_consensus 8081 &
+  ./target/app -g --port_consensus 8082 --port_database 8091 &
+  ./target/app -g --port_consensus 8083 &
+  ./target/app -g --port_consensus 8084 --flag.leader &
 
   # ./server $SERVER -serverAddress=$SERVER_ADDRESS >/dev/null 2>&1 &
 
