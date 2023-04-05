@@ -11,7 +11,7 @@ build() {
   mkdir -p ./target/
   # copy binaries
   cp ./target/config/node ./target/
-  cp ./target/config/user ./target/
+  # cp ./target/config/user ./target/
   cp ./config/node.ini ./target/
 
   (source ./script/build.sh && test)

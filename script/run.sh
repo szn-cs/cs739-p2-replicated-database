@@ -20,7 +20,7 @@ test_heartbeat() {
 
   ./target/node -g --port_consensus 8080 &
   ./target/node -g --port_consensus 8081 &
-  ./target/node -g --port_consensus 8082 &
+  ./target/node -g --port_consensus 8082 --port_database 8091 &
   ./target/node -g --port_consensus 8083 &
   ./target/node -g --port_consensus 8084 --flag.leader &
 

@@ -22,7 +22,7 @@ set(SOURCE_FOLDER "${PROJECT_SOURCE_DIR}/src")
 # enable_testing()
 
 
-# find packages ----------------------------
+# packages ----------------------------
 # find vcpkg packages
 find_package(gRPC CONFIG REQUIRED)
 message(STATUS "Using gRPC ${gRPC_VERSION}")
@@ -30,6 +30,7 @@ message(STATUS "Using gRPC ${gRPC_VERSION}")
 # Boost package
 # install correct version https://www.appsloveworld.com/cplus/100/197/cmake-new-boost-version-may-have-incorrect-or-missing-dependencies-and-imported
 find_package(Boost 1.81.0 COMPONENTS program_options filesystem REQUIRED)
+include_directories(${BOOST_INCLUDE_DIRS})
 message("📚 boost lib: ${Boost_LIBRARIES}")
 message("📚 boost inc: ${Boost_INCLUDE_DIR}")
 
@@ -37,11 +38,9 @@ message("📚 boost inc: ${Boost_INCLUDE_DIR}")
 find_path(TERMCOLOR_INCLUDE_DIRS "termcolor/termcolor.hpp")
 #-------------------------------------------
 
-include_directories(${BOOST_INCLUDE_DIRS})
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_interface.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_node.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_user.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_app.cmake)
 
 # CPACK steers build files to proper paths (maybe used later in build process)
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

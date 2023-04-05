@@ -1,10 +1,9 @@
 #---SERVER------------------------------------------------
 set(SERVER_SRC 
-  ${SOURCE_FOLDER}/node/entrypoint.cpp
-  ${SOURCE_FOLDER}/node/Consensus.cpp
-  ${SOURCE_FOLDER}/node/Database.cpp
-  ${SOURCE_FOLDER}/node/RPCWrapperCall.cpp
-  ${SOURCE_FOLDER}/utility.cc
+${SOURCE_FOLDER}/entrypoint.cc
+${SOURCE_FOLDER}/app.cc
+${SOURCE_FOLDER}/rpc.cc
+${SOURCE_FOLDER}/utility.cc
 )
 set(SERVER_BINARY_NAME 
   node
@@ -24,16 +23,13 @@ target_link_libraries(${SERVER_BINARY_NAME}
   ${_GRPC_GRPCPP} 
   ${_PROTOBUF_LIBPROTOBUF} 
   stdc++fs
+  # gRPC::gpr gRPC::grpc gRPC::grpc++ gRPC::grpc++_alts
 
   ### Boost package
   ${Boost_LIBRARIES}
 )
 
-
-# target_link_libraries(${SERVER_BINARY_NAME} gRPC::gpr gRPC::grpc gRPC::grpc++ gRPC::grpc++_alts)
-
 target_include_directories(${SERVER_BINARY_NAME} PRIVATE ${TERMCOLOR_INCLUDE_DIRS})
-
 
 target_compile_options(${SERVER_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
 target_compile_options(${SERVER_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -D_FILE_OFFSET_BITS=64>)

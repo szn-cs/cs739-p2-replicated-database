@@ -13,7 +13,7 @@ set(_GRPC_GRPCPP gRPC::grpc++)
 set(_GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
 
 # Proto file
-get_filename_component(hw_proto_consensus "${SOURCE_FOLDER}/interface/consensusInterface.proto" ABSOLUTE)
+get_filename_component(hw_proto_consensus "${SOURCE_FOLDER}/consensusInterface.proto" ABSOLUTE)
 get_filename_component(hw_proto_path_consensus "${hw_proto_consensus}" PATH)
 # Generated sources
 set(hw_proto_srcs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.pb.cc")
@@ -22,7 +22,7 @@ set(hw_grpc_srcs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.grpc.
 set(hw_grpc_hdrs_consensus "${CMAKE_CURRENT_BINARY_DIR}/consensusInterface.grpc.pb.h")
 
 # Proto file 
-get_filename_component(hw_proto_database "${SOURCE_FOLDER}/interface/databaseInterface.proto" ABSOLUTE)
+get_filename_component(hw_proto_database "${SOURCE_FOLDER}/databaseInterface.proto" ABSOLUTE)
 get_filename_component(hw_proto_path_database "${hw_proto_database}" PATH)
 # Generated sources
 set(hw_proto_srcs_database "${CMAKE_CURRENT_BINARY_DIR}/databaseInterface.pb.cc")
