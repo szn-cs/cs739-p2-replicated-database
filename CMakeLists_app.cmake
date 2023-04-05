@@ -6,7 +6,7 @@ ${SOURCE_FOLDER}/rpc.cc
 ${SOURCE_FOLDER}/utility.cc
 )
 set(SERVER_BINARY_NAME 
-  node
+  app
 )
 
 include(CheckFunctionExists)
