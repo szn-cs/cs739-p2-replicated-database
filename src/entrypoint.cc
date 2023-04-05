@@ -60,6 +60,8 @@ int main(int argc, char* argv[]) {
  * 2. coordination settings for testing
 */
 int user_entrypoint(std::shared_ptr<utility::parse::Config> config) {
+  // TODO: parse options for sending key value pair to address of cluster member for testing purposes through terminal.
+
   int r = 0;
   string db_address = "127.0.1.1:9000";  // target address & port to send grpc requests to.
 
