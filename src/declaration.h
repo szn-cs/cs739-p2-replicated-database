@@ -257,7 +257,8 @@ namespace utility::parse {
      * https://download.cosine.nl/gvacanti/parsing_configuration_files_c++_CVu265.pdf
      *
     */
-  void parse_options(int argc, char** argv, const std::shared_ptr<Config>& config);
+  template <Mode mode>
+  boost::program_options::variables_map parse_options(int argc, char** argv, const std::shared_ptr<Config>& config, boost::program_options::variables_map& variables);
 
 }  // namespace utility::parse
 

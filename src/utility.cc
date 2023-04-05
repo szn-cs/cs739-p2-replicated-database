@@ -100,7 +100,8 @@ namespace utility::parse {
     return Address(tokens[0], boost::lexical_cast<unsigned short>(tokens[1]));
   }
 
-  void parse_options(int argc, char** argv, const std::shared_ptr<Config>& config) {
+  template <>
+  boost::program_options::variables_map parse_options<Mode::NODE>(int argc, char** argv, const std::shared_ptr<Config>& config, boost::program_options::variables_map& variables) {
     namespace po = boost::program_options;  // boost https://www.boost.org/doc/libs/1_81_0/doc/html/po.html
     namespace fs = boost::filesystem;
 
@@ -114,7 +115,6 @@ namespace utility::parse {
       executablePath = full_path.parent_path().string();
     }  // namespace boost::filesystem;
 
-    po::variables_map variables;
     po::options_description cmd_options;
     po::options_description file_options;
 
@@ -133,7 +133,7 @@ namespace utility::parse {
         primary.add_options()("cluster.address,a", make_value<std::vector<std::string>>(&config->cluster), "Addresses (incl. ports) of consensus cluster participants <address:port>");
         primary.add_options()("flag.debug,g", po::bool_switch(&config->flag.debug)->default_value(false), "Debug flag");
         primary.add_options()("flag.leader", po::bool_switch(&config->flag.leader)->default_value(false), "testing: leader flag");
-        primary.add_options()("timeout,t", po::value<int>(&config->timeout)->default_value(1), "Timeout ");
+        primary.add_options()("timeout", po::value<int>(&config->timeout)->default_value(1), "Timeout ");
 
         cmd_options.add(generic).add(primary);  // set options allowed on command line
         file_options.add(primary);              // set options allowed in config file
@@ -141,7 +141,7 @@ namespace utility::parse {
 
       { /** parse & set options from different sources */
         // po::store(po::parse_command_line(argc, argv, desc), vm);
-        po::store(po::command_line_parser(argc, argv).options(cmd_options).run(), variables);
+        po::store(po::command_line_parser(argc, argv).options(cmd_options).allow_unregistered().run(), variables);
 
         // read from configuration file
         auto config_file = variables.at("config").as<std::string>();
@@ -149,20 +149,22 @@ namespace utility::parse {
         // if (!ifs)
         //   throw std::runtime_error("can not open configuration file: " + config_file);
         if (ifs)
-          po::store(po::parse_config_file(ifs, file_options), variables);
+          po::store(po::parse_config_file(ifs, file_options, true), variables);
         po::notify(variables);
         ifs.close();
       }
+
+      // copy manually the variables:
+      config->mode = (variables.count("mode")) ? variables["mode"].as<EnumOption<Mode>>().value : Mode::NODE;
 
       if (variables.count("help")) {
         std::cout << "Distributed Replicated Database\n"
                   << cmd_options << '\n'
                   << endl;
-        exit(0);
-      }
 
-      // copy manually the variables:
-      config->mode = (variables.count("mode")) ? variables["mode"].as<EnumOption<Mode>>().value : Mode::NODE;
+        if (config->mode != Mode::USER)
+          exit(0);
+      }
 
     } catch (const po::error& ex) {
       std::cerr << red << ex.what() << reset << "\n\n";
@@ -173,6 +175,65 @@ namespace utility::parse {
 
       exit(1);
     }
+
+    return variables;
+  }
+
+  template <>
+  boost::program_options::variables_map parse_options<Mode::USER>(int argc, char** argv, const std::shared_ptr<Config>& config, boost::program_options::variables_map& variables) {
+    namespace po = boost::program_options;  // boost https://www.boost.org/doc/libs/1_81_0/doc/html/po.html
+    namespace fs = boost::filesystem;
+
+    po::options_description cmd_options;
+    po::options_description file_options;
+
+    try {
+      { /** define program options schema */
+        po::options_description user("User program options");
+
+        user.add_options()("target,t", po::value<std::string>(), "target address to send to");
+        user.add_options()("key,k", po::value<std::string>(), "key");
+        user.add_options()("value,v", po::value<std::string>()->default_value(""), "value");
+
+        cmd_options.add(user);   // set options allowed on command line
+        file_options.add(user);  // set options allowed in config file
+      }
+
+      { /** parse & set options from different sources */
+        // po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::store(po::command_line_parser(argc, argv).options(cmd_options).allow_unregistered().run(), variables);
+
+        // read from configuration file
+        if (variables.count("config")) {
+          auto config_file = variables.at("config").as<std::string>();
+          std::ifstream ifs(config_file.c_str());
+          // if (!ifs)
+          //   throw std::runtime_error("can not open configuration file: " + config_file);
+          if (ifs)
+            po::store(po::parse_config_file(ifs, file_options, true), variables);
+          ifs.close();
+        }
+        po::notify(variables);
+      }
+
+      if (variables.count("help")) {
+        std::cout << "\nUser mode of app binary: \n"
+                  << cmd_options << '\n'
+                  << endl;
+        exit(0);
+      }
+
+    } catch (const po::error& ex) {
+      std::cerr << red << ex.what() << reset << "\n\n";
+
+      std::cout << "\nUser mode of app binary: \n"
+                << cmd_options << '\n'
+                << endl;
+
+      exit(1);
+    }
+
+    return variables;
   }
 
 }  // namespace utility::parse
