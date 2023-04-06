@@ -191,10 +191,10 @@ namespace utility::parse {
       { /** define program options schema */
         po::options_description user("User program options");
 
-        user.add_options()("target,t", po::value<std::string>(), "target address to send to");
-        user.add_options()("value,c", po::value<std::string>()->default_value(""), "set");
-        user.add_options()("key,k", po::value<std::string>(), "key");
-        user.add_options()("value,v", po::value<std::string>()->default_value(""), "value");
+        user.add_options()("target,t", po::value<std::string>()->default_value("0.0.0.0:8000"), "target address to send to");
+        user.add_options()("command,c", po::value<std::string>()->default_value("get"), "command");
+        user.add_options()("key,k", po::value<std::string>()->default_value("key-default"), "key");
+        user.add_options()("value,v", po::value<std::string>()->default_value("value-default"), "value");
 
         cmd_options.add(user);   // set options allowed on command line
         file_options.add(user);  // set options allowed in config file
