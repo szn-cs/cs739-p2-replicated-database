@@ -43,6 +43,6 @@ test_rpc() {
   ./target/app -g --port_consensus 8003 --port_database 9003 &
   ./target/app -g --port_consensus 8004 --port_database 9004 --flag.leader &
 
-  ./target/app --mode user --key k1 --value v1 --target 0.0.0.0:8002
-  ./target/app --mode user --key k2 --value v2 --target 0.0.0.0:8004
+  ./target/app --mode user --command set --key k1 --value v1 --target 0.0.0.0:8002
+  ./target/app --mode user --command set --key k2 --value v2 --target 0.0.0.0:8004
 }
