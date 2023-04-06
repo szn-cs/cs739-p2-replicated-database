@@ -126,14 +126,13 @@ namespace rpc {
   Status ConsensusRPC::get_leader(ServerContext* context, const consensus_interface::Empty* request, consensus_interface::GetLeaderResponse* response) {
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::get_leader" << reset << std::endl;
 
-    if(context->IsCancelled()){
+    if (context->IsCancelled()) {
       return Status(grpc::StatusCode::CANCELLED, "Deadline exceeded or Client cancelled, abandoning.");
     }
 
     std::string leader = app::Consensus::GetLeader();
     response->set_leader(leader);
     return Status::OK;
-
   }
 
   Status ConsensusRPC::elect_leader(ServerContext* context, const consensus_interface::ElectLeaderRequest* request, consensus_interface::Empty* response) {
@@ -143,12 +142,12 @@ namespace rpc {
     return Status::OK;
   }
 
-
   Status DatabaseRPC::get(ServerContext* context, const database_interface::GetRequest* request, database_interface::GetResponse* response) {
     std::cout << yellow << "DatabaseRPC::get" << reset << std::endl;
 
     // Check if we are leader by asking consensus thread
-    rpc::call::ConsensusRPCWrapperCall* c = new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel(app::Cluster::config->getLocalIP() + ":8000", grpc::InsecureChannelCredentials()));
+    std::shared_ptr<rpc::call::ConsensusRPCWrapperCall> c = app::Cluster::currentNode->consensusEndpoint.stub;
+
     string addr;
 
     // TODO: this causes infinite loop when called
@@ -305,7 +304,6 @@ namespace rpc::call {
 
     grpc::Status status = this->stub->get_leader(&context, request, &response);
 
-
     std::pair<Status, std::string> res;
     res.first = status;
     res.second = response.leader();
@@ -313,8 +311,7 @@ namespace rpc::call {
     return res;
   }
 
-
-   Status ConsensusRPCWrapperCall::trigger_election() {
+  Status ConsensusRPCWrapperCall::trigger_election() {
     std::cout << yellow << "ElectLeader::success" << reset << std::endl;
 
     grpc::ClientContext context;

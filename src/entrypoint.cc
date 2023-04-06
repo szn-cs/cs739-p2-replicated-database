@@ -71,21 +71,23 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
     //string db_address = "127.0.1.1:9000";  // target address & port to send grpc requests to.
 
     rpc::call::DatabaseRPCWrapperCall* c = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(target, grpc::InsecureChannelCredentials()));
+    // NOTE: above statement equivalent to be equivalent to if proper configs added
+    auto iterator = app::Cluster::memberList->find(target);
+    std::shared_ptr<app::Node> targetNode = iterator->second;
+    std::shared_ptr<rpc::call::DatabaseRPCWrapperCall> c_equivalent = targetNode->databaseEndpoint.stub;
 
-    if(command == "set"){
+    if (command == "set") {
       c->set(key, value);
-    }else if (command == "get"){
+    } else if (command == "get") {
       string message = c->get(key);
       std::cout << message << std::endl;
-    } // TODO: Delete? Should we just have it be a set command with no value?
+    }  // TODO: Delete? Should we just have it be a set command with no value?
 
     return r;
 
-  }else{
+  } else {
     // TODO: Address what happens if ran improperly
     std::cout << "Run again with --help." << endl;
     return 0;
   }
-
-
 }

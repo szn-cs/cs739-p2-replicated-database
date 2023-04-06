@@ -101,7 +101,7 @@ namespace rpc {
       std::string get(const std::string&);
       std::string set(const std::string&, const std::string&);
 
-      std::unique_ptr<database_interface::DatabaseService::Stub> stub;
+      std::shared_ptr<database_interface::DatabaseService::Stub> stub;
     };
 
     /**
@@ -121,7 +121,7 @@ namespace rpc {
       std::pair<Status, std::string> get_leader();
       Status trigger_election();
 
-      std::unique_ptr<consensus_interface::ConsensusService::Stub> stub;
+      std::shared_ptr<consensus_interface::ConsensusService::Stub> stub;
     };
 
   }  // namespace call
@@ -280,10 +280,10 @@ namespace app {
   template <typename C>
   struct Endpoint {
     Endpoint() = default;
-    Endpoint(std::string a) : address(a), stub(std::make_unique<C>(grpc::CreateChannel(a, grpc::InsecureChannelCredentials()))) {}
+    Endpoint(std::string a) : address(a), stub(std::make_shared<C>(grpc::CreateChannel(a, grpc::InsecureChannelCredentials()))) {}
 
     std::string address;
-    std::unique_ptr<C> stub;
+    std::shared_ptr<C> stub;
   };
 
   struct Node {
