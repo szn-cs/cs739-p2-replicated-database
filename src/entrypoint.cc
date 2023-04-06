@@ -40,14 +40,14 @@ int main(int argc, char* argv[]) {
   std::thread t2(utility::server::run_gRPC_server<rpc::DatabaseRPC>, a2);
   std::cout << termcolor::blue << "⚡ Consensus service: " << a1.toString() << " | Database service: " << a2.toString() << termcolor::reset << std::endl;
   // ping broadcasting thread (every randomly picked interval)
-  std::thread t3(app::Consensus::broadcastPeriodicPing);
+  //std::thread t3(app::Consensus::broadcastPeriodicPing);
 
   // start cluster coordination
-  app::Consensus::coordinate();
+  assert(app::Consensus::coordinate().ok());
 
   t1.join();
   t2.join();
-  t3.join();
+  //t3.join();
 
   cout << termcolor::grey << utility::getClockTime() << termcolor::reset << endl;
   return 0;
@@ -66,16 +66,26 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
 
     std::cout << command + " " + key + " " + value + " send to " + target << std::endl;
     // TODO: create RPC requests to modify the database.
+
+    int r = 0;
+    //string db_address = "127.0.1.1:9000";  // target address & port to send grpc requests to.
+
+    rpc::call::DatabaseRPCWrapperCall* c = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(target, grpc::InsecureChannelCredentials()));
+
+    if(command == "set"){
+      c->set(key, value);
+    }else if (command == "get"){
+      string message = c->get(key);
+      std::cout << message << std::endl;
+    } // TODO: Delete? Should we just have it be a set command with no value?
+
+    return r;
+
+  }else{
+    // TODO: Address what happens if ran improperly
+    std::cout << "Run again with --help." << endl;
+    return 0;
   }
 
-  int r = 0;
-  string db_address = "127.0.1.1:9000";  // target address & port to send grpc requests to.
 
-  rpc::call::DatabaseRPCWrapperCall* c = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
-
-  c->set("1", "1");
-  string message = c->get("1");
-  std::cout << message << std::endl;
-
-  return r;
 }

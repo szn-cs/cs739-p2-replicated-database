@@ -27,7 +27,8 @@ namespace app {
       Cluster::currentNode = iterator->second;
     }
 
-    Cluster::leader = "";
+    Cluster::leader = "";    
+    
 
     if (config->flag.debug) {  // print list
       // std::map<std::string, std::unique_ptr<Node>>::iterator itr;
@@ -54,9 +55,41 @@ namespace app {
   // initialized in class instead.
   // std::shared_ptr<Consensus> Consensus::instance = nullptr;
 
-  void Consensus::coordinate() {
-    // if (!Cluster::config.flag.leader)
-    //   return;
+  Status Consensus::coordinate() {
+    if (Cluster::config->flag.leader){
+      // Can use self to indicate if this replica is a leader, an address otherwise
+      Cluster::config->flag.leader = "self";
+    } else {
+      // Must send get_coordinator requests to other stubs
+      // Because this is a call not going explicitly to leader, need to track which
+      // nodes are live
+      std::set<std::string> leaders;
+      std::set<std::string> live_replicas;
+      for(const auto & [key, node] : *(Cluster::memberList)){
+        std::pair<Status, std::string> res = node->consensusEndpoint.stub->get_leader();
+        if(res.first.ok()){ // Replica is up
+          live_replicas.insert(key);
+          if(!res.second.empty()){ // Replica knows the current leader
+            leaders.insert(res.second);
+          }
+        }
+      }
+
+      // leaders.size() will be 1 or 0, unless consensus issues
+      // If 0, trigger an election
+      // Check if leader is alive, if not return a non ok status to trigger an election
+      if(leaders.size() == 1 && live_replicas.find(*leaders.begin()) == live_replicas.end()){
+        pthread_mutex_lock(&(Cluster::leader_mutex));
+        Cluster::leader = *leaders.begin();
+        pthread_mutex_unlock(&(Cluster::leader_mutex));
+      } else{
+        // Send an election request to ourself
+        Cluster::currentNode->consensusEndpoint.stub->trigger_election();
+      }
+
+
+      return Status::OK;
+    }
   }
 
   void Consensus::broadcastPeriodicPing() {
@@ -129,13 +162,27 @@ namespace app {
   }
 
   std::string Consensus::GetLeader() {
-    // TODO: This is not a proper usage of locks
+    // TODO: This is not a proper usage of locks 
     // Threadsafe read of leader address
     pthread_mutex_lock(&Cluster::leader_mutex);
     std::string leader = Cluster::leader;
     pthread_mutex_unlock(&Cluster::leader_mutex);
+
     return leader;
   }
+
+  // std::string Consensus::SetLeader() {
+  //   // TODO: This is not a proper usage of locks 
+  //   // Do we even need to lock a read like this???
+
+  //   // Threadsafe read of leader address
+  //   //pthread_mutex_lock(&Cluster::leader_mutex);
+  //   //std::string leader = Cluster::leader;
+  //   //pthread_mutex_unlock(&Cluster::leader_mutex);
+
+  //   return Cluster::leader;
+  // }
+
 
 }  // namespace app
 

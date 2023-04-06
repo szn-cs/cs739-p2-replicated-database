@@ -133,7 +133,7 @@ namespace utility::parse {
         primary.add_options()("cluster.address,a", make_value<std::vector<std::string>>(&config->cluster), "Addresses (incl. ports) of consensus cluster participants <address:port>");
         primary.add_options()("flag.debug,g", po::bool_switch(&config->flag.debug)->default_value(false), "Debug flag");
         primary.add_options()("flag.leader", po::bool_switch(&config->flag.leader)->default_value(false), "testing: leader flag");
-        primary.add_options()("timeout", po::value<int>(&config->timeout)->default_value(1), "Timeout ");
+        primary.add_options()("timeout", po::value<int>(&config->timeout)->default_value(1000), "Timeout in ms");
 
         cmd_options.add(generic).add(primary);  // set options allowed on command line
         file_options.add(primary);              // set options allowed in config file
@@ -191,10 +191,17 @@ namespace utility::parse {
       { /** define program options schema */
         po::options_description user("User program options");
 
+<<<<<<< HEAD
+        user.add_options()("target,t", po::value<std::string>(), "target address to send to, in the form ip:port (x.x.x.x:xxxx)");
+        user.add_options()("command,c", po::value<std::string>()->default_value(""), "command to execute, either set, get, or delete");
+        user.add_options()("key,k", po::value<std::string>(), "key");
+        user.add_options()("value,v", po::value<std::string>()->default_value(""), "value");
+=======
         user.add_options()("target,t", po::value<std::string>()->default_value("0.0.0.0:8000"), "target address to send to");
         user.add_options()("command,c", po::value<std::string>()->default_value("get"), "command");
         user.add_options()("key,k", po::value<std::string>()->default_value("key-default"), "key");
         user.add_options()("value,v", po::value<std::string>()->default_value("value-default"), "value");
+>>>>>>> 98bd6f0e212f3c197515b499c928406a831529c2
 
         cmd_options.add(user);   // set options allowed on command line
         file_options.add(user);  // set options allowed in config file
@@ -223,6 +230,9 @@ namespace utility::parse {
                   << endl;
         exit(0);
       }
+
+      // TODO: ensure ip address is valid
+
 
     } catch (const po::error& ex) {
       std::cerr << red << ex.what() << reset << "\n\n";

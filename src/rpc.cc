@@ -126,13 +126,23 @@ namespace rpc {
   Status ConsensusRPC::get_leader(ServerContext* context, const consensus_interface::Empty* request, consensus_interface::GetLeaderResponse* response) {
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::get_leader" << reset << std::endl;
 
-    // string leader = app::Consensus::GetLeader();
-    // // TODO: Error handling?
-    // response->set_leader(leader);
-    // return Status::OK;
+    if(context->IsCancelled()){
+      return Status(grpc::StatusCode::CANCELLED, "Deadline exceeded or Client cancelled, abandoning.");
+    }
+
+    std::string leader = app::Consensus::GetLeader();
+    response->set_leader(leader);
+    return Status::OK;
+
   }
 
-  // NOTE: I hardcoded the address to work on my local easier. 0.0.0.0 also probably would have worked
+  Status ConsensusRPC::elect_leader(ServerContext* context, const consensus_interface::ElectLeaderRequest* request, consensus_interface::Empty* response) {
+    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::elect_leader" << reset << std::endl;
+
+    // TODO: Run paxos consensus on leader, proposed value is in the request
+    return Status::OK;
+  }
+
 
   Status DatabaseRPC::get(ServerContext* context, const database_interface::GetRequest* request, database_interface::GetResponse* response) {
     std::cout << yellow << "DatabaseRPC::get" << reset << std::endl;
@@ -282,16 +292,45 @@ namespace rpc::call {
     return (status.ok()) ? "OK" : "RPC failed !";
   }
 
-  std::string ConsensusRPCWrapperCall::get_leader() {
+  std::pair<Status, std::string> ConsensusRPCWrapperCall::get_leader() {
     std::cout << yellow << "GetLeader::success" << reset << std::endl;
+
     grpc::ClientContext context;
+    auto deadline =
+        std::chrono::system_clock::now() + std::chrono::milliseconds(app::Cluster::config->timeout);
+    context.set_deadline(deadline);
+
     consensus_interface::Empty request;
     consensus_interface::GetLeaderResponse response;
 
     grpc::Status status = this->stub->get_leader(&context, request, &response);
 
-    return (status.ok()) ? response.leader() : "RPC failed !";
-    return "default";
+
+    std::pair<Status, std::string> res;
+    res.first = status;
+    res.second = response.leader();
+
+    return res;
+  }
+
+
+   Status ConsensusRPCWrapperCall::trigger_election() {
+    std::cout << yellow << "ElectLeader::success" << reset << std::endl;
+
+    grpc::ClientContext context;
+    auto deadline =
+        std::chrono::system_clock::now() + std::chrono::milliseconds(app::Cluster::config->timeout);
+    context.set_deadline(deadline);
+
+    consensus_interface::ElectLeaderRequest request;
+    consensus_interface::Empty response;
+
+    request.set_key("leader");
+    request.set_leader(app::Cluster::config->ip + std::to_string(app::Cluster::config->port_consensus));
+
+    grpc::Status status = this->stub->elect_leader(&context, request, &response);
+
+    return status;
   }
 
 }  // namespace rpc::call
