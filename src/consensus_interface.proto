@@ -8,6 +8,7 @@ service ConsensusService {
   rpc success(Request) returns (Response) {};
   rpc ping(Request) returns (Response) {};
   rpc get_leader(Empty) returns (GetLeaderResponse) {};
+  rpc elect_leader(ElectLeaderRequest) returns (Empty) {}
 }
 
 message Empty {
@@ -42,5 +43,10 @@ message Response {
 
 message GetLeaderResponse{
   string leader = 1;
+}
+
+message ElectLeaderRequest {
+	string key = 1;
+	string leader = 2;
 }
 

@@ -84,6 +84,7 @@ namespace rpc {
     grpc::Status success(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
     grpc::Status ping(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
     grpc::Status get_leader(ServerContext*, const consensus_interface::Empty*, consensus_interface::GetLeaderResponse*) override;
+    grpc::Status elect_leader(ServerContext* context, const consensus_interface::ElectLeaderRequest* request, consensus_interface::Empty* response) override;
   };
 
   namespace call {
@@ -117,7 +118,8 @@ namespace rpc {
       std::string accept(const std::string&);
       std::string success(const std::string&);
       std::string ping(const std::string&);
-      std::string get_leader();
+      std::pair<Status, std::string> get_leader();
+      Status trigger_election();
 
       std::unique_ptr<consensus_interface::ConsensusService::Stub> stub;
     };
@@ -324,7 +326,8 @@ namespace app {
     /** send RPC pings to all cluster nodes */
     static void broadcastPeriodicPing();
     /** create stub instances for each of the cluster nodes. */
-    static void coordinate();
+    static Status coordinate();
+    static Status TriggerElection();
 
     map<string, map<int, database_interface::LogEntry>> Get_Log();  // Returns current log and db snapshots
     // Methods for adding to log at different points during paxos algorithm
@@ -337,7 +340,7 @@ namespace app {
     string readFromDisk(string path);
     void writeToDisk(string path, string value);
 
-    std::string GetLeader();
+    static std::string GetLeader();
 
     // Store log as a map of keys, in which each round number is mapped to a log entry; Once quorum is achieved, we can delete the log entry
     map<string, map<int, database_interface::LogEntry>> pax_log;
