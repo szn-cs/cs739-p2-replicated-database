@@ -116,8 +116,8 @@ namespace rpc {
           : stub(consensus_interface::ConsensusService::NewStub(channel)){};
 
       /** consensus calls */
-      std::pair<Status, Response> propose(const Request);
-      std::string accept(const std::string&);
+      Response propose(const Request);
+      Response accept(const Request);
       std::string success(const std::string&);
       Status ping(const std::string&);
       std::pair<Status, std::string> get_leader();
@@ -341,7 +341,7 @@ namespace app {
     void Set_Log(const string& key, int round, int a_server, database_interface::Operation op, string value);  // Acceptor accepts proposal
     database_interface::LogEntry new_log();                                                                    // Constructs an empty log entry
     pair<string, int> Find_Max_Proposal(const string& key, int round);
-
+    
     string readFromDisk(string path);
     void writeToDisk(string path, string value);
 

@@ -198,9 +198,9 @@ namespace app {
     // Ping servers, figure out who's alive
     std::vector<Node*> live_nodes;
     for (const auto& [key, node] : *(Cluster::memberList)) {
-      Status res = node->consensusEndpoint.stub->ping();
+      Status res = node->consensusEndpoint.stub->ping(node->consensusAddress, 8000); // 8000 is consensus port
       if(res.ok()){
-        live_nodes.push_back(node);
+        live_nodes.push_back(static_cast<Node*>(node));
       }
     }
 
@@ -209,7 +209,7 @@ namespace app {
     // instantiated during initialization
     int num_live_acceptors = live_nodes.size();
     if(num_live_acceptors <= NUM_REPLICAS / 2){
-      return Status(grpc::StatusCode::ABORTED, "Not enough for quorum.");
+      return Status(grpc::StatusCode::ABORTED, "Not enough live servers for quorum.");
     }
 
     // 1. Entering the proposal stage
@@ -227,14 +227,19 @@ namespace app {
     std::string accepted_value;
     consensus_interface::Operation accepted_op = consensus_interface::Operation::NOT_SET;
 
+    // const auto n = Cluster::leader;
+    // Status response = n->consensusEndpoint.stub->propose(prepare_request);
+
+    //string leader = GetLeader();
+
     for(const Node* n : live_nodes){
-      std::pair<Status, Response> response = n->consensusEndpoint.stub->propose(prepare_request);
-      if(response.first.ok()){
+      Response response = n->consensusEndpoint.stub->propose(prepare_request);
+      if(response.status() == Status_Types::OK){
         num_accepted_proposals++;
-        if(response.second.aserver_id() > accepted_id){
-          accepted_id = response.second.aserver_id();
-          accepted_value = response.second.value();
-          accepted_op = response.second.op();
+        if(response.aserver_id() > accepted_id){
+          accepted_id = response.aserver_id();
+          accepted_value = response.value();
+          accepted_op = response.op();
         }
       }
     }
@@ -248,10 +253,29 @@ namespace app {
 
     // 2. Entering the accept stage
 
+    // int num_final_acceptances = 0;
 
+    // Request accept_request;
+    // accept_request.set_key(key);
+    // accept_request.set_round(round);
+    // accept_request.set_pserver_id(propose_id);
 
+    // for(const Node* n : live_nodes){
+    //   Response response = n->consensusEndpoint.stub->accept(prepare_request);
+    //   if(response.status() == Status_Types::OK){
+    //     num_final_acceptances++;
+    //     if(response.aserver_id() > accepted_id){
+    //       accepted_id = response.aserver_id();
+    //       accepted_value = response.value();
+    //       accepted_op = response.op();
+    //     }
+    //   }
+    // }
 
-
+    // if(num_final_acceptances <= NUM_REPLICAS / 2){
+    //   // A node must have died between our first ping and here
+    //   return Status(grpc::StatusCode::ABORTED, "Failed to achieve quorum.");
+    // }
 
     return Status::OK;
 
