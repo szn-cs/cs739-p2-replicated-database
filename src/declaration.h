@@ -47,6 +47,8 @@ using grpc::Server, grpc::ServerBuilder, grpc::ServerContext, grpc::ServerReader
 using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan, termcolor::grey;
 namespace fs = std::filesystem;
 
+
+
 namespace utility {
   // construct a relative path
   std::string constructRelativePath(std::string path, std::string rootPath);
@@ -82,7 +84,7 @@ namespace rpc {
     grpc::Status propose(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
     grpc::Status accept(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
     grpc::Status success(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
-    grpc::Status ping(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
+    grpc::Status ping(ServerContext*, const consensus_interface::Empty*, consensus_interface::Empty*) override;
     grpc::Status get_leader(ServerContext*, const consensus_interface::Empty*, consensus_interface::GetLeaderResponse*) override;
     grpc::Status elect_leader(ServerContext* context, const consensus_interface::ElectLeaderRequest* request, consensus_interface::Empty* response) override;
   };
@@ -114,10 +116,10 @@ namespace rpc {
           : stub(consensus_interface::ConsensusService::NewStub(channel)){};
 
       /** consensus calls */
-      std::string propose(const std::string&);
+      std::pair<Status, Response> propose(const Request);
       std::string accept(const std::string&);
       std::string success(const std::string&);
-      std::string ping(const std::string&);
+      Status ping(const std::string&);
       std::pair<Status, std::string> get_leader();
       Status trigger_election();
 
@@ -134,6 +136,9 @@ namespace app {
     Database,
     Consensus
   };
+
+  // TODO: Make this dynamic?
+  #define NUM_REPLICAS 5
 
 }  // namespace app
 
@@ -348,6 +353,25 @@ namespace app {
     //bool isLeader = false;
 
     inline static std::shared_ptr<Consensus> instance = std::make_shared<Consensus>();  // global instance
+
+    /**
+      * @brief The actual Paxos algorithm, taking a request and achieving consensus on it
+      *
+      * @param request: a request, either a ElectLeader, Put, or Delete request. Must have request.key() and request.value() in the proto
+      * 
+      * This method will take a request (ElectLeader, Put, Delete maybe) and attempt to achieve consensus
+      * on it. It will go through the propose stage, sending propose requests to all live replicas,
+      * hoping to hear back from enough to establish a quorum (more than math.floor(NUM_REPLICAS / 2)). If another
+      * value has been accepted by a replica with a higher id than ours, it will reply with that value, informing
+      * us to change our propsed value to the previously accepted value. 
+      * It will then send accept requests to each of the replicas, hoping that all of them will accept the value 
+      * we are proposing. If enough do, we have achieved consensus and (I believe) we can safely delete this key's
+      * entry from the log.
+      * Other replicas can now contact us (since, if we are running this, we are the leader or an election) to get() the
+      * value associated with the key (or the address of the new leader) we just achieved consensus on.
+    */
+    template<typename Req>
+    Status AttemptConsensus(const Req&);
   };
 
   /**

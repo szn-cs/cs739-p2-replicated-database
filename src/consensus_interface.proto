@@ -6,9 +6,9 @@ service ConsensusService {
   rpc propose(Request) returns (Response) {};
   rpc accept(Request) returns (Response) {};
   rpc success(Request) returns (Response) {};
-  rpc ping(Request) returns (Response) {};
+  rpc ping(Empty) returns (Empty) {};
   rpc get_leader(Empty) returns (GetLeaderResponse) {};
-  rpc elect_leader(ElectLeaderRequest) returns (Empty) {}
+  rpc elect_leader(ElectLeaderRequest) returns (Empty) {};
 }
 
 message Empty {
@@ -20,7 +20,8 @@ enum Operation {
   GET = 0;
   SET = 1;
   DELETE = 2;
-  SET_COORDINATOR = 3;
+  SET_LEADER = 3;
+  NOT_SET = 4;
 };
 
 message Request {
@@ -38,7 +39,12 @@ enum Status_Types {
  }
 
 message Response {
-  Status_Types status = 1;
+    string value = 1;
+    int32 pserver_id = 2;
+    int32 aserver_id = 3;
+    int32 round = 4;
+    Operation op = 5;
+    Status_Types status = 6;
 }
 
 message GetLeaderResponse{
@@ -47,6 +53,5 @@ message GetLeaderResponse{
 
 message ElectLeaderRequest {
 	string key = 1;
-	string leader = 2;
+	string value = 2;
 }
-

@@ -58,6 +58,7 @@ namespace app {
     if (Cluster::config->flag.leader) {
       // Can use self to indicate if this replica is a leader, an address otherwise
       Cluster::config->flag.leader = "self";
+      return Status::OK;
     } else {
       // Must send get_coordinator requests to other stubs
       // Because this is a call not going explicitly to leader, need to track which
@@ -180,6 +181,81 @@ namespace app {
 
   //   return Cluster::leader;
   // }
+
+
+  template <typename Req> // Either ElectLeader request or Put request or Delete request if we implement delete separate than Put
+  Status Consensus::AttemptConsensus(const Req& r){
+    std::string key = r.key();
+    std::string value = r.value();
+    
+    // Get current round
+    map<string, map<int, database_interface::LogEntry>> pax_log = Consensus::Get_Log();
+    int round = pax_log[key].size();
+
+    // Set proposal id to 1, first proposal we are making from this replica
+    int propose_id = 1;
+
+    // Ping servers, figure out who's alive
+    std::vector<Node*> live_nodes;
+    for (const auto& [key, node] : *(Cluster::memberList)) {
+      Status res = node->consensusEndpoint.stub->ping();
+      if(res.ok()){
+        live_nodes.push_back(node);
+      }
+    }
+
+    // Do we have enough for quorum?
+    // TODO:: Non-hardcoded value for quorum, should be stored as a data member for Consensus class and
+    // instantiated during initialization
+    int num_live_acceptors = live_nodes.size();
+    if(num_live_acceptors <= NUM_REPLICAS / 2){
+      return Status(grpc::StatusCode::ABORTED, "Not enough for quorum.");
+    }
+
+    // 1. Entering the proposal stage
+
+    // Preparing the request
+    Request prepare_request;
+    prepare_request.set_key(key);
+    prepare_request.set_round(round);
+    prepare_request.set_pserver_id(propose_id);
+
+    // Sending the request to all live nodes, tracking if a value has already been accepted for
+    // our key
+    int num_accepted_proposals = 0;
+    int accepted_id = 0;
+    std::string accepted_value;
+    consensus_interface::Operation accepted_op = consensus_interface::Operation::NOT_SET;
+
+    for(const Node* n : live_nodes){
+      std::pair<Status, Response> response = n->consensusEndpoint.stub->propose(prepare_request);
+      if(response.first.ok()){
+        num_accepted_proposals++;
+        if(response.second.aserver_id() > accepted_id){
+          accepted_id = response.second.aserver_id();
+          accepted_value = response.second.value();
+          accepted_op = response.second.op();
+        }
+      }
+    }
+    std::cout << termcolor::cyan << num_accepted_proposals << " servers accepted our proposal.";
+
+    // Check if we still have a quorum
+    if(num_accepted_proposals <= NUM_REPLICAS / 2){
+      // A node must have died between our first ping and here
+      return Status(grpc::StatusCode::ABORTED, "Failed to achieve quorum.");
+    }
+
+    // 2. Entering the accept stage
+
+
+
+
+
+
+    return Status::OK;
+
+  }
 
 }  // namespace app
 

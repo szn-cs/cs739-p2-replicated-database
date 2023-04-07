@@ -115,7 +115,7 @@ namespace rpc {
     return Status::OK;
   }
 
-  Status ConsensusRPC::ping(ServerContext* context, const consensus_interface::Request* request, consensus_interface::Response* response) {
+  Status ConsensusRPC::ping(ServerContext* context, const consensus_interface::Empty* request, consensus_interface::Empty* response) {
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::ping" << reset << std::endl;
 
     cout << "recieved ping from: " << endl;
@@ -138,7 +138,11 @@ namespace rpc {
   Status ConsensusRPC::elect_leader(ServerContext* context, const consensus_interface::ElectLeaderRequest* request, consensus_interface::Empty* response) {
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::elect_leader" << reset << std::endl;
 
-    // TODO: Run paxos consensus on leader, proposed value is in the request
+    if(context->IsCancelled()){
+      return Status(grpc::StatusCode::CANCELLED, "Request timed out");
+    }
+
+    //Status paxos_status = 
     return Status::OK;
   }
 
@@ -146,12 +150,10 @@ namespace rpc {
     std::cout << yellow << "DatabaseRPC::get" << reset << std::endl;
 
     // Check if we are leader by asking consensus thread
-    std::shared_ptr<rpc::call::ConsensusRPCWrapperCall> c = app::Cluster::currentNode->consensusEndpoint.stub;
-
-    string addr;
-
-    // TODO: this causes infinite loop when called
-    // addr = c->get_leader();
+    std::string addr = app::Cluster::leader;
+    if(addr.empty()){
+      return Status(grpc::StatusCode::ABORTED, "No leader set");
+    }
 
     // Pair to store <value, error_code>. Useful in determining whether a key simply has an empty value or if they key does not exist
     // in the database, allowing us to return an error in the latter case
@@ -259,10 +261,20 @@ namespace rpc::call {
 
   /* Consensus RPC wrappers ------------------------------------------------------------- */
 
-  std::string ConsensusRPCWrapperCall::propose(const std::string& s) {
+  std::pair<Status, Response> ConsensusRPCWrapperCall::propose(const Request request) {
     std::cout << yellow << "ConsensusRPCWrapperCall::propose" << reset << std::endl;
+    ClientContext context;
+    auto deadline =
+        std::chrono::system_clock::now() + std::chrono::milliseconds(5000);
+    context.set_deadline(deadline);
+    Response response;
 
-    return "default";
+    grpc::Status status = this->stub->propose(&context, request, &response);
+
+    std::pair<Status, Response> res;
+    res.first = status;
+    res.second = response;
+    return res;
   }
 
   std::string ConsensusRPCWrapperCall::accept(const std::string& s) {
@@ -277,18 +289,19 @@ namespace rpc::call {
     return "default";
   }
 
-  std::string ConsensusRPCWrapperCall::ping(const std::string& s) {
+  Status ConsensusRPCWrapperCall::ping(const std::string& s) {
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPCWrapperCall::ping" << reset << std::endl;
 
     grpc::ClientContext context;
-    consensus_interface::Request request;
-    consensus_interface::Response response;
-
-    request.set_value(s);
+    auto deadline =
+        std::chrono::system_clock::now() + std::chrono::milliseconds(500);
+    context.set_deadline(deadline);
+    consensus_interface::Empty request;
+    consensus_interface::Empty response;
 
     grpc::Status status = this->stub->ping(&context, request, &response);
 
-    return (status.ok()) ? "OK" : "RPC failed !";
+    return status;
   }
 
   std::pair<Status, std::string> ConsensusRPCWrapperCall::get_leader() {
@@ -323,7 +336,7 @@ namespace rpc::call {
     consensus_interface::Empty response;
 
     request.set_key("leader");
-    request.set_leader(app::Cluster::config->ip + std::to_string(app::Cluster::config->port_consensus));
+    request.set_value(app::Cluster::config->ip + std::to_string(app::Cluster::config->port_consensus));
 
     grpc::Status status = this->stub->elect_leader(&context, request, &response);
 
