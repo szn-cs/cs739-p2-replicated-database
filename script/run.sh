@@ -18,11 +18,17 @@ test_heartbeat() {
   source ./script/setenv.sh
   # SERVER_ADDRESS=c220g5-110912.wisc.cloudlab.us:50051
 
-  ./target/app -g --port_consensus 8000 &
-  ./target/app -g --port_consensus 8001 &
-  ./target/app -g --port_consensus 8002 &
-  ./target/app -g --port_consensus 8003 &
-  ./target/app -g --port_consensus 8004 --flag.leader &
+  # ./target/app -g --port_consensus 8000 &
+  # ./target/app -g --port_consensus 8001 &
+  # ./target/app -g --port_consensus 8002 &
+  # ./target/app -g --port_consensus 8003 &
+  # ./target/app -g --port_consensus 8004 --flag.leader &
+
+  ./target/config -g --port_consensus 8000 &
+  ./target/config -g --port_consensus 8001 &
+  ./target/config -g --port_consensus 8002 &
+  ./target/config -g --port_consensus 8003 &
+  ./target/config -g --port_consensus 8004 --flag.leader &
 
   # ./server $SERVER -serverAddress=$SERVER_ADDRESS >/dev/null 2>&1 &
 
@@ -37,13 +43,23 @@ test_heartbeat() {
 }
 
 test_rpc() {
-  ./target/app -g --port_consensus 8000 --port_database 9000 &
-  ./target/app -g --port_consensus 8001 --port_database 9001 &
-  ./target/app -g --port_consensus 8002 --port_database 9002 &
-  ./target/app -g --port_consensus 8003 --port_database 9003 &
-  ./target/app -g --port_consensus 8004 --port_database 9004 --flag.leader &
+  # ./target/app -g --port_consensus 8000 --port_database 9000 &
+  # ./target/app -g --port_consensus 8001 --port_database 9001 &
+  # ./target/app -g --port_consensus 8002 --port_database 9002 &
+  # ./target/app -g --port_consensus 8003 --port_database 9003 &
+  # ./target/app -g --port_consensus 8004 --port_database 9004 --flag.leader &
 
-  ./target/app --mode user --command set --key k1 --value v1 --target 0.0.0.0:8002
-  ./target/app --mode user --command set --key k2 --value v2 --target 0.0.0.0:8004
-  ./target/app --mode user --command get --key k1 --target 0.0.0.0:8000
+  # ./target/app --mode user --command set --key k1 --value v1 --target 0.0.0.0:8002
+  # ./target/app --mode user --command set --key k2 --value v2 --target 0.0.0.0:8004
+  # ./target/app --mode user --command get --key k1 --target 0.0.0.0:8000
+
+  ./target/config -g --port_consensus 8000 --port_database 9000 &
+  ./target/config -g --port_consensus 8001 --port_database 9001 &
+  ./target/config -g --port_consensus 8002 --port_database 9002 &
+  ./target/config -g --port_consensus 8003 --port_database 9003 &
+  ./target/config -g --port_consensus 8004 --port_database 9004 --flag.leader &
+
+  ./target/config --mode user --command set --key k1 --value v1 --target 0.0.0.0:8002
+  ./target/config --mode user --command set --key k2 --value v2 --target 0.0.0.0:8004
+  ./target/config --mode user --command get --key k1 --target 0.0.0.0:8000
 }

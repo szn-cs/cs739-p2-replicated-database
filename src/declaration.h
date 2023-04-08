@@ -81,10 +81,10 @@ namespace rpc {
   */
   class ConsensusRPC : public consensus_interface::ConsensusService::Service {
    public:
-    grpc::Status propose(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
-    grpc::Status accept(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
+    Response propose(const consensus_interface::Request);
+    Response accept(const consensus_interface::Request*) override;
     grpc::Status success(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
-    grpc::Status ping(ServerContext*, const consensus_interface::Empty*, consensus_interface::Empty*) override;
+    grpc::Status ping(string address, int port) override;
     grpc::Status get_leader(ServerContext*, const consensus_interface::Empty*, consensus_interface::GetLeaderResponse*) override;
     grpc::Status elect_leader(ServerContext* context, const consensus_interface::ElectLeaderRequest* request, consensus_interface::Empty* response) override;
   };
@@ -119,7 +119,7 @@ namespace rpc {
       Response propose(const Request);
       Response accept(const Request);
       std::string success(const std::string&);
-      Status ping(const std::string&);
+      Status ping(const std::string&, int port);
       std::pair<Status, std::string> get_leader();
       Status trigger_election();
 

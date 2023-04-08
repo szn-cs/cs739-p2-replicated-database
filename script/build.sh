@@ -25,6 +25,14 @@ test() {
 ## clean
 clean() {
   cmake --build ./target/config --target clean
+  cd target/config
+  rm consensus_interface.grpc.pb.h 
+  rm CMakeFiles/app.dir/src/app.cc.o CMakeFiles/app.dir/src/rpc.cc.o CMakeFiles/app.dir/consensus_interface.grpc.pb.cc.o CMakeFiles/app.dir/src/utility.cc.o CMakeFiles/app.dir/consensus_interface.pb.cc.o  
+  rm CMakeFiles/app.dir/src/entrypoint.cc.o CMakeFiles/app.dir/database_interface.pb.cc.o CMakeFiles/app.dir/database_interface.grpc.pb.cc.o CMakeFiles/custom_hw_grpc_proto.dir/database_interface.grpc.pb.cc.o
+  rm CMakeFiles/custom_hw_grpc_proto.dir/consensus_interface.grpc.pb.cc.o CMakeFiles/custom_hw_grpc_proto.dir/database_interface.pb.cc.o CMakeFiles/custom_hw_grpc_proto.dir/consensus_interface.pb.cc.o
+  cd src
+  rm consensusInterface.grpc.pb.cc consensusInterface.grpc.pb.h consensusInterface.pb.cc consensusInterface.pb.h libcustom_hw_grpc_proto.a
+  cd ../../..
 }
 
 install_package() {
