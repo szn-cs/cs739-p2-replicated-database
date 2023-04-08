@@ -198,9 +198,9 @@ namespace app {
     // Ping servers, figure out who's alive
     std::vector<Node*> live_nodes;
     for (const auto& [key, node] : *(Cluster::memberList)) {
-      Status res = node->consensusEndpoint.stub->ping(node->consensusAddress, 8000); // 8000 is consensus port
+      Status res = node->consensusEndpoint.stub->ping(node->consensusEndpoint.address, 8000); // 8000 is consensus port
       if(res.ok()){
-        live_nodes.push_back(static_cast<Node*>(node));
+        live_nodes.push_back(node.get());
       }
     }
 
@@ -275,7 +275,11 @@ namespace app {
     // if(num_final_acceptances <= NUM_REPLICAS / 2){
     //   // A node must have died between our first ping and here
     //   return Status(grpc::StatusCode::ABORTED, "Failed to achieve quorum.");
-    // }
+    // } else {
+
+      //commit
+
+    //}
 
     return Status::OK;
 

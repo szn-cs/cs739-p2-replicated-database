@@ -4,7 +4,7 @@ namespace rpc {
 
 /*ServerContext* context*/
 
-  Response ConsensusRPC::propose(const consensus_interface::Request* request) {
+  Response ConsensusRPC::propose(const consensus_interface::Request request) {
     std::cout << yellow << "ConsensusRPC::propose" << reset << std::endl;
 
     app::Consensus consensus = *app::Consensus::instance;
@@ -259,26 +259,30 @@ namespace rpc::call {
 
   /* Consensus RPC wrappers ------------------------------------------------------------- */
 
-  std::pair<Status, Response> ConsensusRPCWrapperCall::propose(const Request request) {
+  Response ConsensusRPCWrapperCall::propose(const Request request) {
     std::cout << yellow << "ConsensusRPCWrapperCall::propose" << reset << std::endl;
-    ClientContext context;
+    /*ClientContext context;
     auto deadline =
         std::chrono::system_clock::now() + std::chrono::milliseconds(5000);
-    context.set_deadline(deadline);
-    Response response;
+    context.set_deadline(deadline);*/
 
-    grpc::Status status = this->stub->propose(&context, request, &response);
+    // grpc::Status status = 
+    Response response = this->stub->propose(request);
 
-    std::pair<Status, Response> res;
-    res.first = status;
-    res.second = response;
-    return res;
+    return response;
+
+    // std::pair<Status, Response> res;
+    // res.first = status;
+    // res.second = response;
+    // return res;
   }
 
-  std::string ConsensusRPCWrapperCall::accept(const std::string& s) {
+  Response ConsensusRPCWrapperCall::accept(const Request request) {
     std::cout << yellow << "ConsensusRPCWrapperCall::accept" << reset << std::endl;
 
-    return "default";
+    Response response = this->stub->accept(request);
+
+    return response;
   }
 
   std::string ConsensusRPCWrapperCall::success(const std::string& s) {
@@ -287,7 +291,7 @@ namespace rpc::call {
     return "default";
   }
 
-  Status ConsensusRPCWrapperCall::ping(const std::string& s) {
+  Status ConsensusRPCWrapperCall::ping(const std::string& s, int port) {
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPCWrapperCall::ping" << reset << std::endl;
 
     grpc::ClientContext context;
