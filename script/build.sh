@@ -12,7 +12,7 @@ build() {
   # copy binaries
   cp ./target/config/app ./target/
   # cp ./target/config/user ./target/
-  cp ./config/node.ini ./target/
+  cp ./config/*.ini ./target/
 
   (source ./script/build.sh && test)
 }
