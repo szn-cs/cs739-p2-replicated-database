@@ -34,7 +34,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/target/app",
-			"args": ["-g","--config","50_node_cluster.ini"],
+			"args": ["-g","--config","50_node_cluster.ini", "-m", "user", "--command", "test_consistency_no_failure"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],

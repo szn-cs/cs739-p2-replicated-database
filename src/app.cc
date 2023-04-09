@@ -15,39 +15,39 @@ namespace app {
     Cluster::config = config;
 
     Cluster::memberList = std::make_shared<std::map<std::string, std::shared_ptr<Node>>>();
-    
+
     // Transform each config into a address via make_address, inserting each object into the vector.
     std::vector<utility::parse::Address> l;
     std::transform(addressList.begin(), addressList.end(), std::back_inserter(l), utility::parse::make_address);
-    for (utility::parse::Address a : l){
-      
+    for (utility::parse::Address a : l) {
       // NOTE: Statically assuming db port will be 1000 above its consensus port
       std::string db_addr = a.address + ":" + std::to_string(a.port + 1000);
-      if(Cluster::config->flag.debug){
-        std::cout << "consensus address: " << a.toString() << " database address: " << db_addr << reset << std::endl;
-      }
-     
+      // if(Cluster::config->flag.debug){
+      //   std::cout << "consensus address: " << a.toString() << " database address: " << db_addr << reset << std::endl;
+      // }
+
       Cluster::memberList->insert(std::make_pair(a.toString(), std::make_shared<Node>(a.toString(), db_addr)));
     }
 
     num_replicas = l.size();
-    if(Cluster::config->flag.debug){
+    if (Cluster::config->flag.debug) {
       std::cout << "There are " << num_replicas << " replicas." << reset << std::endl;
     }
 
     // current node's details
-    utility::parse::Address addressConsensus = Cluster::config->flag.local_ubuntu ? // If local ubuntu
-      utility::parse::make_address("127.0.1.1:" + std::to_string(Cluster::config->port_consensus)) : // Ip is 127.0.1.1
-      Cluster::config->getAddress<app::Service::Consensus>(); // Ip could be something else, found through getAddress()
+    utility::parse::Address addressConsensus = Cluster::config->flag.local_ubuntu ?  // If local ubuntu
+                                                   utility::parse::make_address("127.0.1.1:" + std::to_string(Cluster::config->port_consensus))
+                                                                                  :                         // Ip is 127.0.1.1
+                                                   Cluster::config->getAddress<app::Service::Consensus>();  // Ip could be something else, found through getAddress()
 
-    utility::parse::Address addressDatabase = Cluster::config->flag.local_ubuntu ? // If local ubuntu
-      utility::parse::make_address("127.0.1.1:" + std::to_string(Cluster::config->port_database)) : // Ip is 127.0.1.1
-      Cluster::config->getAddress<app::Service::Database>(); // Ip could be something else, found through getAddress()
+    utility::parse::Address addressDatabase = Cluster::config->flag.local_ubuntu ?  // If local ubuntu
+                                                  utility::parse::make_address("127.0.1.1:" + std::to_string(Cluster::config->port_database))
+                                                                                 :                        // Ip is 127.0.1.1
+                                                  Cluster::config->getAddress<app::Service::Database>();  // Ip could be something else, found through getAddress()
 
     // addressConsensus = Cluster::config->getAddress<app::Service::Consensus>();  // addresses as IDs follow the consensus port
     // addressDatabase = Cluster::config->getAddress<app::Service::Database>();    // addresses as IDs follow the consensus port
-    
-   
+
     auto iterator = Cluster::memberList->find(addressConsensus.toString());
     if (iterator == Cluster::memberList->end()) {  // not found
       Cluster::currentNode = std::make_shared<Node>(addressConsensus, addressDatabase);
@@ -71,14 +71,13 @@ namespace app {
 
   // initialized in class instead.
   // std::shared_ptr<Consensus> Consensus::instance = nullptr;
-  
 
   Status Consensus::coordinate() {
     if (Cluster::config->flag.leader) {
       if (Cluster::config->flag.debug) {
         std::cout << termcolor::blue << "I am the leader, address " << Cluster::config->getAddress<app::Service::Consensus>().toString() << reset << endl;
       }
-      
+
       // Can use self to indicate if this replica is a leader, an address otherwise
       Cluster::leader = Cluster::config->getAddress<app::Service::Consensus>().toString();
       return Status::OK;
@@ -93,7 +92,7 @@ namespace app {
       std::set<std::string> leaders;
       std::set<std::string> live_replicas;
       for (const auto& [key, node] : *(Cluster::memberList)) {
-        if(Cluster::config->flag.debug){
+        if (Cluster::config->flag.debug) {
           std::cout << termcolor::blue << "get_leader() request to " << key << reset << endl;
         }
         std::pair<Status, std::string> res = node->consensusEndpoint.stub->get_leader();
@@ -109,7 +108,7 @@ namespace app {
       // If 0, trigger an election
       // Check if leader is alive, if not return a non ok status to trigger an election
       if (leaders.size() == 1 && live_replicas.find(*leaders.begin()) != live_replicas.end()) {
-        if(Cluster::config->flag.debug){
+        if (Cluster::config->flag.debug) {
           std::cout << termcolor::blue << "Valid leader returned." << reset << endl;
         }
 
@@ -118,13 +117,13 @@ namespace app {
         pthread_mutex_unlock(&(Cluster::leader_mutex));
       } else {
         // Send an election request to ourself
-        if(Cluster::config->flag.debug){
-          std::cout << termcolor::blue << "No valid leader returned by any server, starting election. " 
-          << leaders.size() << " leaders were suggested." << reset << endl;
+        if (Cluster::config->flag.debug) {
+          std::cout << termcolor::blue << "No valid leader returned by any server, starting election. "
+                    << leaders.size() << " leaders were suggested." << reset << endl;
         }
-        
+
         Status election_status = Cluster::currentNode->consensusEndpoint.stub->trigger_election();
-        if(!election_status.ok()){
+        if (!election_status.ok()) {
           return Status(grpc::StatusCode::ABORTED, "we could not establish a leader, not enough nodes.");
         }
       }
@@ -163,7 +162,7 @@ namespace app {
     pax_log[key][round].set_op(op);
     pax_log[key][round].set_accepted_value(value);
     pthread_mutex_unlock(&log_mutex);
-  } 
+  }
 
   map<string, map<int, consensus_interface::LogEntry>> Consensus::Get_Log() {
     //pthread_mutex_lock(&log_mutex);
@@ -171,14 +170,14 @@ namespace app {
     //pthread_mutex_unlock(&log_mutex);
   }
 
-  map<int, consensus_interface::LogEntry> Consensus::Get_Log(const string &key) {
-    //pthread_mutex_lock(&log_mutex);
+  map<int, consensus_interface::LogEntry> Consensus::Get_Log(const string& key) {
+    pthread_mutex_lock(&log_mutex);
     return pax_log[key];
     //pthread_mutex_unlock(&log_mutex);
   }
 
-  consensus_interface::LogEntry Consensus::Get_Log(const string &key, int round) {
-    //pthread_mutex_lock(&log_mutex);
+  consensus_interface::LogEntry Consensus::Get_Log(const string& key, int round) {
+    pthread_mutex_lock(&log_mutex);
     return pax_log[key][round];
     //pthread_mutex_unlock(&log_mutex);
   }
@@ -222,8 +221,9 @@ namespace app {
     //pthread_mutex_lock(&Cluster::leader_mutex);
     //std::string leader = Cluster::leader;
     //pthread_mutex_unlock(&Cluster::leader_mutex);
-      
-    return Cluster::leader;;
+
+    return Cluster::leader;
+    ;
   }
 
   // std::string Consensus::SetLeader() {
@@ -238,17 +238,16 @@ namespace app {
   //   return Cluster::leader;
   // }
 
-
-  std::pair<Status, Response> Consensus::AttemptConsensus(consensus_interface::Request r){
-    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset 
-      << yellow << "Consensus::AttemptConsensus for key " << r.key() << " value: " << r.value() << reset << std::endl;
+  std::pair<Status, Response> Consensus::AttemptConsensus(consensus_interface::Request r) {
+    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset
+              << yellow << "Consensus::AttemptConsensus for key " << r.key() << " value: " << r.value() << reset << std::endl;
 
     std::string key = r.key();
     std::string value = r.value();
 
     std::pair<Status, Response> default_response;
     default_response.first = Status(grpc::StatusCode::ABORTED, "Not enough live servers for quorum.");
-    
+
     // Get current round
     map<string, map<int, consensus_interface::LogEntry>> pax_log = Consensus::Get_Log();
     int round = pax_log[key].size();
@@ -261,17 +260,17 @@ namespace app {
     std::vector<std::shared_ptr<Node>> live_nodes;
     for (const auto& [key, node] : *(Cluster::memberList)) {
       Status res = node->consensusEndpoint.stub->ping();
-      if(res.ok()){
+      if (res.ok()) {
         live_nodes.push_back(node);
       }
     }
 
     // Do we have enough for quorum?
     int num_live_acceptors = live_nodes.size();
-    if(num_live_acceptors <= std::ceil(num_replicas / 2.0) - 1){
-      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << cyan 
-        << "Ping state: Not enough live servers for quorum, could only find " << num_live_acceptors 
-        << " replicas (including myself) out of " << num_replicas << " (including myself)." << reset << std::endl; 
+    if (num_live_acceptors <= std::ceil(num_replicas / 2.0) - 1) {
+      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << cyan
+                << "Ping state: Not enough live servers for quorum, could only find " << num_live_acceptors
+                << " replicas (including myself) out of " << num_replicas << " (including myself)." << reset << std::endl;
       return default_response;
     }
 
@@ -290,11 +289,11 @@ namespace app {
     std::string accepted_value;
     consensus_interface::Operation accepted_op = consensus_interface::Operation::NOT_SET;
 
-    for(const auto& [key, node] : *(Cluster::memberList)){
+    for (const auto& [key, node] : *(Cluster::memberList)) {
       std::pair<Status, Response> response = node->consensusEndpoint.stub->propose(prepare_request);
-      if(response.first.ok()){
+      if (response.first.ok()) {
         num_accepted_proposals++;
-        if(response.second.aserver_id() > accepted_id){
+        if (response.second.aserver_id() > accepted_id) {
           accepted_id = response.second.aserver_id();
           accepted_value = response.second.value();
           accepted_op = response.second.op();
@@ -302,14 +301,14 @@ namespace app {
       }
     }
 
-    if(Cluster::config->flag.debug){
-      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow 
-        << "Proposal phase done. " << num_accepted_proposals << " accept, " 
-          << num_live_acceptors - num_accepted_proposals << " reject." << reset << std::endl;
+    if (Cluster::config->flag.debug) {
+      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow
+                << "Proposal phase done. " << num_accepted_proposals << " accept, "
+                << num_live_acceptors - num_accepted_proposals << " reject." << reset << std::endl;
     }
-   
+
     // Check if we still have a quorum
-    if(num_accepted_proposals <= std::ceil(num_replicas / 2.0) - 1){
+    if (num_accepted_proposals <= std::ceil(num_replicas / 2.0) - 1) {
       // A node must have died between our first ping and here
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Propose state: Not enough live servers for quorum." << reset << std::endl;
       return default_response;
@@ -324,20 +323,20 @@ namespace app {
     accept_request.set_key(key);
     accept_request.set_round(round);
     accept_request.set_pserver_id(propose_id);
-    if(accepted_id > 0){
+    if (accepted_id > 0) {
       accept_request.set_op(accepted_op);
       accept_request.set_value(accepted_value);
       accept_request.set_aserver_id(accepted_id);
-    }else{
+    } else {
       accept_request.set_op(r.op());
       accept_request.set_value(r.value());
     }
 
     // For each node, send an accept request
     Response acceptance;
-    for(const auto& [key, node] : *(Cluster::memberList)){
+    for (const auto& [key, node] : *(Cluster::memberList)) {
       std::pair<Status, Response> response = node->consensusEndpoint.stub->accept(accept_request);
-      if(response.first.ok()){
+      if (response.first.ok()) {
         num_final_acceptances++;
         acceptance = response.second;
       }else{
@@ -349,14 +348,14 @@ namespace app {
       }
     }
 
-    if(Cluster::config->flag.debug){
-      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow 
-        << "Acceptance phase done. " << num_final_acceptances << " accept, " 
-          << num_live_acceptors - num_final_acceptances << " reject." << reset << std::endl;
+    if (Cluster::config->flag.debug) {
+      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow
+                << "Acceptance phase done. " << num_final_acceptances << " accept, "
+                << num_live_acceptors - num_final_acceptances << " reject." << reset << std::endl;
     }
 
     // Check that we still have quorum
-    if(num_final_acceptances <= std::ceil(num_replicas / 2.0) - 1){
+    if (num_final_acceptances <= std::ceil(num_replicas / 2.0) - 1) {
       // A node must have died between our first ping and here
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Accept state: Not enough live servers for quorum." << reset << std::endl;
       return default_response;
@@ -374,15 +373,15 @@ namespace app {
     success_request.set_round(acceptance.round());
 
     // Loop through the nodes, informing them of the committed change to the db
-    for(const auto& [key, node] : *(Cluster::memberList)){
+    for (const auto& [key, node] : *(Cluster::memberList)) {
       Status response = node->consensusEndpoint.stub->success(success_request);
       // It doesn't matter if this doesn't go through, the only time it wouldn't is if a server is down, which
       // would mean they have to go through recovery anyway.
     }
 
-    if(Cluster::config->flag.debug){
-      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow 
-        << "Success phase done. Accepted value: " << acceptance.value() << reset << std::endl;
+    if (Cluster::config->flag.debug) {
+      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow
+                << "Success phase done. Accepted value: " << acceptance.value() << reset << std::endl;
     }
 
     std::pair<Status, Response> resp;
