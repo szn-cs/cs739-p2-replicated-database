@@ -34,6 +34,9 @@ test_example() {
   # fg
   # bg
   # fg %1
+
+  # kill all processes hanging from a closed terminal
+  kill $(ps aux | grep '[./]target/app' | awk '{print $2}')
 }
 
 test_rpc() {
@@ -58,16 +61,24 @@ test_leader_functionality() {
 }
 
 test_consistency_no_failure() {
+  CONFIG=5_node_cluster.ini
+
   for i in {0..49}; do
     ones=$(($i % 10))
     tens=$((${i} / 10 % 10))
     port_suffix="${tens}${ones}"
 
-    if [[ $port_suffix == "hello" ]]; then
-      ./target/app -g --config "50_node_cluster.ini" --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader &
+    if [[ $port_suffix == "00" ]]; then
+      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader &
     else
-      ./target/app -g --config "50_node_cluster.ini" --port_consensus 80${port_suffix} --port_database 90${port_suffix} &
+      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} &
     fi
 
   done
+
+  ./target/app -g -m user --command test_consistency_no_failure --config 50_node_cluster.ini --port_consensus 80${port_suffix} --port_database 90${port_suffix}
+
+  # cleanup
+  kill $(jobs -p) >/dev/null 2>&1
+  kill $(ps aux | grep '[./]target/app' | awk '{print $2}') >/dev/null 2>&1
 }

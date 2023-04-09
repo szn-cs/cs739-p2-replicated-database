@@ -71,7 +71,7 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
     auto key = variables["key"].as<std::string>();
     auto value = variables["value"].as<std::string>();
 
-    std::cout << command + " " + key + " " + value + " send to " + target << std::endl;
+    std::cout << "arguments provided: " << command + " " + key + " " + value + " " + target << std::endl;
     // TODO: create RPC requests to modify the database.
     //string db_address = "127.0.1.1:9000";  // target address & port to send grpc requests to.
 
@@ -149,7 +149,7 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
 
       std::string g = replica_conn->get("1");
       std::cout << termcolor::cyan << "value returned was " << g << reset << std::endl;
-    } else if(command == "test_5_random_ops"){
+    } else if (command == "test_5_random_ops") {
       std::vector<rpc::call::DatabaseRPCWrapperCall*> db_addrs;
       db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9000", grpc::InsecureChannelCredentials())));
       db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9001", grpc::InsecureChannelCredentials())));
@@ -189,14 +189,11 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       std::sample(db_addrs.begin(), db_addrs.end(), std::back_inserter(random_db_addrs), num_ops, std::mt19937{std::random_device{}()});
       std::sample(keys.begin(), keys.end(), std::back_inserter(random_keys), num_ops, std::mt19937{std::random_device{}()});
 
-      char alpha[26] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-                          'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                          'o', 'p', 'q', 'r', 's', 't', 'u',
-                          'v', 'w', 'x', 'y', 'z' };
+      char alpha[26] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 
-      for(int i = 0; i < 1000; i++){
+      for (int i = 0; i < 1000; i++) {
         string result = "";
-        for (int i = 0; i<5; i++){
+        for (int i = 0; i < 5; i++) {
           result = result + alpha[rand() % 26];
         }
 
@@ -204,21 +201,77 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       }
 
       std::map<std::string, std::vector<std::string>> results;
-      for(int i = 0; i < 5; i++){
+      for (int i = 0; i < 5; i++) {
         results[str_addrs[i]];
-        for(std::string key : keys){
+        for (std::string key : keys) {
           results[str_addrs[i]].push_back(db_addrs[i]->get(key));
         }
       }
 
-      for(const auto& [key, value] : results){
+      for (const auto& [key, value] : results) {
         std::cout << cyan << key << ": " << reset;
-        copy(value.begin(),
-         value.end(),
-         ostream_iterator<std::string>(std::cout, " "));
-         std::cout << reset << endl;
+        copy(value.begin(), value.end(), ostream_iterator<std::string>(std::cout, " "));
+        std::cout << reset << endl;
       }
 
+    } else if (command == "test_consistency_no_failure") {
+      string address_random = "127.0.1.1:8000";
+      rpc::call::ConsensusRPCWrapperCall* c = new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel(address_random, grpc::InsecureChannelCredentials()));
+      std::pair<Status, std::string> res = c->get_leader();
+      if (!res.first.ok())
+        throw std::runtime_error("RPC FAILURE");
+
+      string address_leader = res.second;
+      std::cout << "Leader is: " << address_leader << std::endl;
+
+      std::vector<rpc::call::DatabaseRPCWrapperCall*> db_addrs;
+      std::vector<std::string> str_addrs;
+      for (const auto& [key, node] : *(app::Cluster::memberList)) {
+        db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(node->databaseEndpoint.address, grpc::InsecureChannelCredentials())));
+        str_addrs.push_back(node->databaseEndpoint.address);
+      }
+
+      std::vector<std::string> keys;
+      keys.push_back("a");
+      keys.push_back("b");
+      keys.push_back("c");
+      keys.push_back("d");
+      keys.push_back("e");
+      keys.push_back("f");
+      keys.push_back("g");
+      keys.push_back("h");
+      keys.push_back("i");
+      size_t num_ops = 1000;
+      std::vector<rpc::call::DatabaseRPCWrapperCall*> random_db_addrs;
+      std::vector<std::string> random_keys;
+
+      std::sample(db_addrs.begin(), db_addrs.end(), std::back_inserter(random_db_addrs), num_ops, std::mt19937{std::random_device{}()});
+      std::sample(keys.begin(), keys.end(), std::back_inserter(random_keys), num_ops, std::mt19937{std::random_device{}()});
+
+      char alpha[26] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+
+      for (int i = 0; i < 1000; i++) {
+        string result = "";
+        for (int i = 0; i < 5; i++) {
+          result = result + alpha[rand() % 26];
+        }
+
+        random_db_addrs[i]->set(random_keys[i], result);
+      }
+
+      std::map<std::string, std::vector<std::string>> results;
+      for (int i = 0; i < 5; i++) {
+        results[str_addrs[i]];
+        for (std::string key : keys) {
+          results[str_addrs[i]].push_back(db_addrs[i]->get(key));
+        }
+      }
+
+      for (const auto& [key, value] : results) {
+        std::cout << cyan << key << ": " << reset;
+        copy(value.begin(), value.end(), ostream_iterator<std::string>(std::cout, " "));
+        std::cout << reset << endl;
+      }
     }
   }
 
