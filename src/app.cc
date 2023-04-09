@@ -149,7 +149,7 @@ namespace app {
     pthread_mutex_unlock(&log_mutex);
   }
 
-  // update proposal server
+  // update promise id
   void Consensus::Set_Log(const string& key, int round, int p_server) {
     pthread_mutex_lock(&log_mutex);
     pax_log[key][round].set_p_server_id(p_server);
@@ -163,14 +163,27 @@ namespace app {
     pax_log[key][round].set_op(op);
     pax_log[key][round].set_accepted_value(value);
     pthread_mutex_unlock(&log_mutex);
-  }
+  } 
 
   map<string, map<int, database_interface::LogEntry>> Consensus::Get_Log() {
-    map<string, map<int, database_interface::LogEntry>> c;
-    return c;
+    pthread_mutex_lock(&log_mutex);
+    return pax_log;
+    pthread_mutex_unlock(&log_mutex);
   }
 
-  // Find the highest proposal number seen for the given key
+  map<int, database_interface::LogEntry> Consensus::Get_Log(const string &key) {
+    pthread_mutex_lock(&log_mutex);
+    return pax_log[key];
+    pthread_mutex_unlock(&log_mutex);
+  }
+
+  database_interface::LogEntry Consensus::Get_Log(const string &key, int round) {
+    pthread_mutex_lock(&log_mutex);
+    return pax_log[key][round];
+    pthread_mutex_unlock(&log_mutex);
+  }
+
+  // Find the highest round number seen for the given key
   pair<string, int> Consensus::Find_Max_Proposal(const string& key, int round) {
     map<string, map<int, database_interface::LogEntry>> pax_log = Consensus::Get_Log();
 

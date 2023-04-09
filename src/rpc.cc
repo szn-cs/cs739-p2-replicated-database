@@ -13,8 +13,6 @@ namespace rpc {
       return Status(grpc::StatusCode::CANCELLED, "Deadline exceeded or Client cancelled, abandoning.");
     }
 
-    // map<string, map<int, database_interface::LogEntry>> pax_log = consensus.Get_Log();
-
     string key = request->key();
     int round = request->round();
     string value = request->value();
@@ -24,25 +22,48 @@ namespace rpc {
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << 
         cyan << "Proposal is for key " << key << reset << std::endl;
     }
-    // consensus.Set_Log(key, round, p_server);
 
-    // // Check if the current proposal round is greater than the previously seen round for the given key
-    // int prevRound = pax_log[key].size() - 1;
-    // if (round <= prevRound) {
+    app::Consensus::instance->Set_Log(key, round); // add log entry when acceptor receives a proposal
+
+    database_interface::LogEntry pax_log = app::Consensus::instance->Get_Log(key, round);
+
+    // Check if the current proposal round is greater than the previously seen round for the given key
+
+    // int largestRoundSoFar = INT_MIN; // initialize to the smallest possible int value
+    // for (const auto& entry : pax_log[key]) {
+    //   largestRoundSoFar = max(largestRoundSoFar, entry.first);
+    // }
+
+    // if (largestRoundSoFar > round) {
     //   response->set_status(Status_Types::FAILED);
     //   return Status::OK;
     // }
 
-    // // requests from clients reach the propose stage
-    // // multi paxos -> only leader proposes
+    if (pax_log.p_server_id() >= p_server) {
+      response->set_status(Status_Types::FAILED);
+      return Status::OK;
+    } 
 
-    // // see if there exists a value for the given key with a proposal number greater than the current
+    // see if there exists an accepted value for the given key and round
+
+    if (pax_log.a_server_id() > 0) {
+
+      response->set_aserver_id(paxos_log.aserver_id());
+      response->set_op(paxos_log.op());
+      response->set_value(paxos_log.value());
+
+      return Status::OK;
+
+    }
+
     // pair<string, int> already_seen_key = consensus.Find_Max_Proposal(key, round);
 
     // if (already_seen_key.first != "") {  // the value is not nil ? then propose the same value
     //   round = already_seen_key.second + 1;
     //   value = already_seen_key.first;
     // }
+
+    // else , continue with the current one
 
     response->set_value(value);
     response->set_op(consensus_interface::SET_LEADER); // TODO: Hardcoded
@@ -57,8 +78,6 @@ namespace rpc {
     if (context->IsCancelled()) {
       return Status(grpc::StatusCode::CANCELLED, "Deadline exceeded or Client cancelled, abandoning.");
     }
-
-    // app::Consensus consensus = *app::Consensus::instance;
 
     // Extract the key and proposal no. from the request
     string key = request->key();
@@ -75,34 +94,12 @@ namespace rpc {
         cyan << "Acceptance is for key " << key << " and value " << value << reset << std::endl;
     }
 
-    // Lock the mutex for pax_log to prevent concurrent modifications
-    //pthread_mutex_lock(&log_mutex);
+    database_interface::LogEntry pax_log = app::Consensus::instance->Get_Log(key, round);
 
-    // map<string, map<int, database_interface::LogEntry>> pax_log = consensus.Get_Log();
-
-    // // Check if a value has already been accepted for this key and round
-    // if (pax_log.find(key) != pax_log.end()) {  // check if key exists in map
-    //   auto it = pax_log[key].find(round);      // check if round exists for the key
-    //   if (it != pax_log[key].end() && it->second.a_server_id() != -1) {
-    //     // log of the third type exists for the key and round
-    //     // it->second gives you the log entry for the key and round
-    //     const database_interface::LogEntry entry = pax_log[key][round];
-    //     if (entry.accepted_value() == value) {
-    //       // If the acceptance information matches, return success
-    //       response->set_status(Status_Types::OK);
-    //     } else {
-    //       // If the acceptance information does not match, return failure
-    //       response->set_status(Status_Types::FAILED);
-    //     }
-    //   }
-    // } else {
-    //   database_interface::Operation op = database_interface::Operation::SET;
-    //   // If a value has not been accepted for this key and round, add log indicating that a new value has been accepted
-    //   consensus.Set_Log(key, round, aserver_id, op, value);
-    // }
-
-    // Unlock the mutex for pax_log
-    //pthread_mutex_unlock(&log_mutex);
+    if (pax_log.p_server_id() >= p_server) {
+      response->set_status(Status_Types::FAILED);
+      return Status::OK;
+    }
 
     response->set_op(op);
     response->set_value(value);
@@ -110,6 +107,7 @@ namespace rpc {
     response->set_aserver_id(aserver_id);
     response->set_round(round);
 
+    app::Consensus::instance->Set_Log(key, round, pserver_id, op, value);
 
     return Status::OK;
   }
@@ -122,10 +120,28 @@ namespace rpc {
 
     std::string key = request->key();
     std::string value = request->value();
+    int round = request->round();
+    int pserver_id = request->pserver_id();
+    consensus_interface::Operation op = request->op();
+    string value = request->value();
+
+    app::Consensus::instance->Set_Log(key, round, pserver_id, op, value);
 
     if(app::Cluster::config->flag.debug){
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << 
         cyan << "Successful consensus, key " << key << " is now set to value " << value << reset << std::endl;
+    }
+
+    map<int, database_interface::LogEntry> pax_log = app::Consensus::instance->Get_Log(key);
+
+    int largestRoundSoFar = INT_MIN; // initialize to the smallest possible int value
+    for (const auto& entry : pax_log) {
+      largestRoundSoFar = max(largestRoundSoFar, entry.first);
+    }
+
+    if (largestRoundSoFar > round) {
+      response->set_status(Status_Types::FAILED);
+      return Status::OK;
     }
 
     if(key == "leader"){
