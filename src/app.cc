@@ -157,7 +157,7 @@ namespace app {
   }
 
   // Update the acceptance info for the given key and round.
-  void Consensus::Set_Log(const string& key, int round, int a_server, database_interface::Operation op, string value) {
+  void Consensus::Set_Log(const string& key, int round, int a_server, consensus_interface::Operation op, const string& value) {
     pthread_mutex_lock(&log_mutex);
     pax_log[key][round].set_a_server_id(a_server);
     pax_log[key][round].set_op(op);
@@ -165,19 +165,19 @@ namespace app {
     pthread_mutex_unlock(&log_mutex);
   } 
 
-  map<string, map<int, database_interface::LogEntry>> Consensus::Get_Log() {
+  map<string, map<int, consensus_interface::LogEntry>> Consensus::Get_Log() {
     pthread_mutex_lock(&log_mutex);
     return pax_log;
     pthread_mutex_unlock(&log_mutex);
   }
 
-  map<int, database_interface::LogEntry> Consensus::Get_Log(const string &key) {
+  map<int, consensus_interface::LogEntry> Consensus::Get_Log(const string &key) {
     pthread_mutex_lock(&log_mutex);
     return pax_log[key];
     pthread_mutex_unlock(&log_mutex);
   }
 
-  database_interface::LogEntry Consensus::Get_Log(const string &key, int round) {
+  consensus_interface::LogEntry Consensus::Get_Log(const string &key, int round) {
     pthread_mutex_lock(&log_mutex);
     return pax_log[key][round];
     pthread_mutex_unlock(&log_mutex);
@@ -185,7 +185,7 @@ namespace app {
 
   // Find the highest round number seen for the given key
   pair<string, int> Consensus::Find_Max_Proposal(const string& key, int round) {
-    map<string, map<int, database_interface::LogEntry>> pax_log = Consensus::Get_Log();
+    map<string, map<int, consensus_interface::LogEntry>> pax_log = Consensus::Get_Log();
 
     //pthread_mutex_lock(&log_mutex);
     int max_proposal = round;
@@ -250,7 +250,7 @@ namespace app {
     default_response.first = Status(grpc::StatusCode::ABORTED, "Not enough live servers for quorum.");
     
     // Get current round
-    map<string, map<int, database_interface::LogEntry>> pax_log = Consensus::Get_Log();
+    map<string, map<int, consensus_interface::LogEntry>> pax_log = Consensus::Get_Log();
     int round = pax_log[key].size();
 
     // Set proposal id to 1, first proposal we are making from this replica

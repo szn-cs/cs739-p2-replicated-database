@@ -25,7 +25,7 @@ namespace rpc {
 
     app::Consensus::instance->Set_Log(key, round); // add log entry when acceptor receives a proposal
 
-    database_interface::LogEntry pax_log = app::Consensus::instance->Get_Log(key, round);
+    consensus_interface::LogEntry pax_log = app::Consensus::instance->Get_Log(key, round);
 
     // Check if the current proposal round is greater than the previously seen round for the given key
 
@@ -40,17 +40,16 @@ namespace rpc {
     // }
 
     if (pax_log.p_server_id() >= p_server) {
-      response->set_status(Status_Types::FAILED);
-      return Status::OK;
+      return Status(grpc::StatusCode::ABORTED, "Proposal is out of date.");
     } 
 
     // see if there exists an accepted value for the given key and round
 
     if (pax_log.a_server_id() > 0) {
 
-      response->set_aserver_id(paxos_log.aserver_id());
-      response->set_op(paxos_log.op());
-      response->set_value(paxos_log.value());
+      response->set_aserver_id(pax_log.a_server_id());
+      response->set_op(pax_log.op());
+      response->set_value(pax_log.accepted_value());
 
       return Status::OK;
 
@@ -94,11 +93,10 @@ namespace rpc {
         cyan << "Acceptance is for key " << key << " and value " << value << reset << std::endl;
     }
 
-    database_interface::LogEntry pax_log = app::Consensus::instance->Get_Log(key, round);
+    consensus_interface::LogEntry pax_log = app::Consensus::instance->Get_Log(key, round);
 
-    if (pax_log.p_server_id() >= p_server) {
-      response->set_status(Status_Types::FAILED);
-      return Status::OK;
+    if (pax_log.p_server_id() >= pserver_id) {
+      return Status(grpc::StatusCode::ABORTED, "Accept request is out of date.");
     }
 
     response->set_op(op);
@@ -123,7 +121,6 @@ namespace rpc {
     int round = request->round();
     int pserver_id = request->pserver_id();
     consensus_interface::Operation op = request->op();
-    string value = request->value();
 
     app::Consensus::instance->Set_Log(key, round, pserver_id, op, value);
 
@@ -132,7 +129,7 @@ namespace rpc {
         cyan << "Successful consensus, key " << key << " is now set to value " << value << reset << std::endl;
     }
 
-    map<int, database_interface::LogEntry> pax_log = app::Consensus::instance->Get_Log(key);
+    map<int, consensus_interface::LogEntry> pax_log = app::Consensus::instance->Get_Log(key);
 
     int largestRoundSoFar = INT_MIN; // initialize to the smallest possible int value
     for (const auto& entry : pax_log) {
@@ -140,8 +137,7 @@ namespace rpc {
     }
 
     if (largestRoundSoFar > round) {
-      response->set_status(Status_Types::FAILED);
-      return Status::OK;
+      return Status(grpc::StatusCode::ABORTED, "Information is outdated.");
     }
 
     if(key == "leader"){

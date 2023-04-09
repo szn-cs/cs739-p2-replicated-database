@@ -59,3 +59,10 @@ message ElectLeaderRequest {
 message DbAddressResponse {
   string addr = 1;
 }
+
+message LogEntry {
+  int32 p_server_id = 1;
+  int32 a_server_id = 2;
+  Operation op = 3;
+  string accepted_value = 4;
+}

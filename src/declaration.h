@@ -13,6 +13,9 @@
 #include <sys/types.h>
 #include <time.h>
 #include <cmath>
+#include <random>
+#include <algorithm>
+
 
 #include <algorithm>
 #include <boost/algorithm/string/classification.hpp>
@@ -336,14 +339,15 @@ namespace app {
     static Status coordinate();
     static Status TriggerElection();
 
-    map<int, database_interface::LogEntry> Get_Log(const string& key);
+    map<string, map<int, consensus_interface::LogEntry>> Get_Log();
+    map<int, consensus_interface::LogEntry> Get_Log(const string& key);
 
-    database_interface::LogEntry Get_Log(const string& key, int round);  // Returns current log and db snapshots
+    consensus_interface::LogEntry Get_Log(const string& key, int round);  // Returns current log and db snapshots
     // Methods for adding to log at different points during paxos algorithm
     void Set_Log(const string& key, int round);              // Acceptor receives proposal
     void Set_Log(const string& key, int round, int p_server);// Acceptor promises proposal
-    void Set_Log(const string& key, int round, int a_server, database_interface::Operation op, string value);  // Acceptor accepts proposal
-    database_interface::LogEntry new_log();                                                                    // Constructs an empty log entry
+    void Set_Log(const string& key, int round, int a_server, consensus_interface::Operation op, const string& value);  // Acceptor accepts proposal
+    consensus_interface::LogEntry new_log();                                                                    // Constructs an empty log entry
     pair<string, int> Find_Max_Proposal(const string& key, int round);
     
     string readFromDisk(string path);
@@ -352,7 +356,7 @@ namespace app {
     static std::string GetLeader();
 
     // Store log as a map of keys, in which each round number is mapped to a log entry; Once quorum is achieved, we can delete the log entry
-    map<string, map<int, database_interface::LogEntry>> pax_log;
+    map<string, map<int, consensus_interface::LogEntry>> pax_log;
     pthread_mutex_t log_mutex;
     //bool isLeader = false;
 
