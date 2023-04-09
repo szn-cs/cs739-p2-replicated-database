@@ -12,10 +12,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
-#include <cmath>
-#include <random>
-#include <algorithm>
-
 
 #include <algorithm>
 #include <boost/algorithm/string/classification.hpp>
@@ -26,6 +22,7 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
+#include <chrono>
 #include <cmath>
 #include <ctime>
 #include <filesystem>
@@ -34,6 +31,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -344,10 +342,10 @@ namespace app {
 
     consensus_interface::LogEntry Get_Log(const string& key, int round);  // Returns current log and db snapshots
     // Methods for adding to log at different points during paxos algorithm
-    void Set_Log(const string& key, int round);              // Acceptor receives proposal
-    void Set_Log(const string& key, int round, int p_server);// Acceptor promises proposal
+    void Set_Log(const string& key, int round);                                                                        // Acceptor receives proposal
+    void Set_Log(const string& key, int round, int p_server);                                                          // Acceptor promises proposal
     void Set_Log(const string& key, int round, int a_server, consensus_interface::Operation op, const string& value);  // Acceptor accepts proposal
-    consensus_interface::LogEntry new_log();                                                                    // Constructs an empty log entry
+    consensus_interface::LogEntry new_log();                                                                           // Constructs an empty log entry
     pair<string, int> Find_Max_Proposal(const string& key, int round);
 
     string readFromDisk(string path);

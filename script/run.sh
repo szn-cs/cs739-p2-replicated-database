@@ -78,7 +78,7 @@ test_consistency_no_failure() {
 
   #### separate stage
 
-  ./target/app -g -m user --command test_non_leader_db --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix}
+  ./target/app -g -m user --command test_non_leader_db --config ${CONFIG}
 
   #### separate stage
 
