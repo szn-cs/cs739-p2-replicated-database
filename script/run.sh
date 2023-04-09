@@ -76,7 +76,11 @@ test_consistency_no_failure() {
 
   done
 
-  ./target/app -g -m user --command test_consistency_no_failure --config 50_node_cluster.ini --port_consensus 80${port_suffix} --port_database 90${port_suffix}
+  #### separate stage
+
+  ./target/app -g -m user --command test_consistency_no_failure --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix}
+
+  #### separate stage
 
   # cleanup
   kill $(jobs -p) >/dev/null 2>&1
