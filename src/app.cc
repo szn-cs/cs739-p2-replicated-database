@@ -166,21 +166,21 @@ namespace app {
   } 
 
   map<string, map<int, consensus_interface::LogEntry>> Consensus::Get_Log() {
-    pthread_mutex_lock(&log_mutex);
+    //pthread_mutex_lock(&log_mutex);
     return pax_log;
-    pthread_mutex_unlock(&log_mutex);
+    //pthread_mutex_unlock(&log_mutex);
   }
 
   map<int, consensus_interface::LogEntry> Consensus::Get_Log(const string &key) {
-    pthread_mutex_lock(&log_mutex);
+    //pthread_mutex_lock(&log_mutex);
     return pax_log[key];
-    pthread_mutex_unlock(&log_mutex);
+    //pthread_mutex_unlock(&log_mutex);
   }
 
   consensus_interface::LogEntry Consensus::Get_Log(const string &key, int round) {
-    pthread_mutex_lock(&log_mutex);
+    //pthread_mutex_lock(&log_mutex);
     return pax_log[key][round];
-    pthread_mutex_unlock(&log_mutex);
+    //pthread_mutex_unlock(&log_mutex);
   }
 
   // Find the highest round number seen for the given key
@@ -340,6 +340,12 @@ namespace app {
       if(response.first.ok()){
         num_final_acceptances++;
         acceptance = response.second;
+      }else{
+        if(Cluster::config->flag.debug){
+          std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << 
+            red << "Node" << key << " denied our request, error code " << response.first.error_code() 
+            << " with message " << response.first.error_message() << reset << std::endl;
+        }
       }
     }
 
@@ -401,19 +407,19 @@ namespace app {
   std::pair<std::string, int> Database::Get_KV(const string& key) {
     // Returning a pair to indicate if the element does not exist vs if its simply an empty string in the db
     std::pair<std::string, int> res;
-    int ret = pthread_mutex_lock(&data_mutex);
-    if (ret != 0) {
-      if (ret == EINVAL) {
-        pthread_mutex_init(&data_mutex, NULL);
-      }
-    }
+    // int ret = pthread_mutex_lock(&data_mutex);
+    // if (ret != 0) {
+    //   if (ret == EINVAL) {
+    //     pthread_mutex_init(&data_mutex, NULL);
+    //   }
+    // }
     auto i = kv_store.find(key);
     if (i == kv_store.end()) {
       res.first = "";
       res.second = 1;
       return res;
     }
-    pthread_mutex_unlock(&data_mutex);
+    // pthread_mutex_unlock(&data_mutex);
     res.first = i->second;
     res.second = 0;
     return res;

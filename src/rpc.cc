@@ -39,7 +39,7 @@ namespace rpc {
     //   return Status::OK;
     // }
 
-    if (pax_log.p_server_id() >= p_server) {
+    if (pax_log.p_server_id() > p_server) {
       return Status(grpc::StatusCode::ABORTED, "Proposal is out of date.");
     } 
 
@@ -64,9 +64,8 @@ namespace rpc {
 
     // else , continue with the current one
 
-    response->set_value(value);
-    response->set_op(consensus_interface::SET_LEADER); // TODO: Hardcoded
-    response->set_aserver_id(p_server);
+    response->set_round(round);
+    response->set_pserver_id(p_server);
 
     return Status::OK;
   }
@@ -95,7 +94,12 @@ namespace rpc {
 
     consensus_interface::LogEntry pax_log = app::Consensus::instance->Get_Log(key, round);
 
-    if (pax_log.p_server_id() >= pserver_id) {
+    if (pax_log.p_server_id() > pserver_id) {
+      if(app::Cluster::config->flag.debug){
+        std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << 
+          red << "Denied Acceptance. Log p_server_id is " << pax_log.p_server_id() 
+          << " while the new p_server_id is " << pserver_id << reset << std::endl;
+      }
       return Status(grpc::StatusCode::ABORTED, "Accept request is out of date.");
     }
 
@@ -353,7 +357,9 @@ namespace rpc::call {
   /* Database RPC wrappers ------------------------------------------------------------- */
 
   std::string DatabaseRPCWrapperCall::get(const std::string& s, bool deadline) {
-    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "DatabaseRPCWrapperCall::get" << reset << std::endl;
+    if(app::Cluster::config->flag.debug){
+      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "DatabaseRPCWrapperCall::get" << reset << std::endl;
+    }
 
     grpc::ClientContext context;
     if(deadline){
@@ -379,7 +385,9 @@ namespace rpc::call {
   }
 
   Status DatabaseRPCWrapperCall::set(const std::string& key, const std::string& value, bool deadline) {
-    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "DatabaseRPCWrapperCall::set" << reset << std::endl;
+    if(app::Cluster::config->flag.debug){
+      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "DatabaseRPCWrapperCall::set" << reset << std::endl;
+    }
 
     grpc::ClientContext context;
 
@@ -396,7 +404,7 @@ namespace rpc::call {
 
 
     grpc::Status status = this->stub->set(&context, request, &response);
-    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << status.error_code() << " " << status.error_message() << reset << std::endl;
+    //std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << status.error_code() << " " << status.error_message() << reset << std::endl;
 
     // if (status.error_code() == grpc::StatusCode::UNAVAILABLE ||
     //     status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED) {

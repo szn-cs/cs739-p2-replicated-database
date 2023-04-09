@@ -164,13 +164,6 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       str_addrs.push_back("127.0.1.1:9003");
       str_addrs.push_back("127.0.1.1:9004");
 
-      // std::vector<rpc::call::ConsensusRPCWrapperCall*> c_addrs;
-      // c_addrs.push_back(new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel("127.0.1.1:8000", grpc::InsecureChannelCredentials())));
-      // c_addrs.push_back(new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel("127.0.1.1:8001", grpc::InsecureChannelCredentials())));
-      // c_addrs.push_back(new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel("127.0.1.1:8002", grpc::InsecureChannelCredentials())));
-      // c_addrs.push_back(new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel("127.0.1.1:8003", grpc::InsecureChannelCredentials())));
-      // c_addrs.push_back(new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel("127.0.1.1:8004", grpc::InsecureChannelCredentials())));
-
       std::vector<std::string> keys;
       keys.push_back("a");
       keys.push_back("b");
@@ -181,26 +174,28 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       keys.push_back("g");
       keys.push_back("h");
       keys.push_back("i");
+      keys.push_back("j");
 
-      size_t num_ops = 1000;
-      std::vector<rpc::call::DatabaseRPCWrapperCall*> random_db_addrs;
-      std::vector<std::string> random_keys;
+      int num_ops = 100;
 
-      std::sample(db_addrs.begin(), db_addrs.end(), std::back_inserter(random_db_addrs), num_ops, std::mt19937{std::random_device{}()});
-      std::sample(keys.begin(), keys.end(), std::back_inserter(random_keys), num_ops, std::mt19937{std::random_device{}()});
+      srand(123);
 
       char alpha[26] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
                           'h', 'i', 'j', 'k', 'l', 'm', 'n',
                           'o', 'p', 'q', 'r', 's', 't', 'u',
                           'v', 'w', 'x', 'y', 'z' };
 
-      for(int i = 0; i < 1000; i++){
+      for(int i = 0; i < num_ops; i++){
         string result = "";
         for (int i = 0; i<5; i++){
           result = result + alpha[rand() % 26];
         }
-
-        random_db_addrs[i]->set(random_keys[i], result);
+        int replica_idx = rand() % db_addrs.size();
+        int key_idx = rand() % keys.size();
+        Status s = db_addrs[replica_idx]->set(keys[key_idx], result);
+        if(!s.ok()){
+          std::cout << reset << red << "Set(" << keys[key_idx] << ", " << result << ") failed" << reset << endl; 
+        }
       }
 
       std::map<std::string, std::vector<std::string>> results;
@@ -210,7 +205,6 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
           results[str_addrs[i]].push_back(db_addrs[i]->get(key));
         }
       }
-
       for(const auto& [key, value] : results){
         std::cout << cyan << key << ": " << reset;
         copy(value.begin(),
