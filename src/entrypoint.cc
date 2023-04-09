@@ -182,7 +182,7 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
 
       char alpha[26] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 
-      for (int i = 0; i < 1000; i++) {
+      for (int i = 0; i < num_ops; i++) {
         string result = "";
         for (int i = 0; i < 5; i++) {
           result = result + alpha[rand() % 26];
@@ -193,13 +193,15 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
         if(!s.ok()){
           std::cout << reset << red << "Set(" << keys[key_idx] << ", " << result << ") failed" << reset << endl; 
         }
+        usleep(50000);
       }
 
       std::map<std::string, std::vector<std::string>> results;
       for (int i = 0; i < 5; i++) {
+        google::protobuf::Map<string, string> replica_db = db_addrs[i]->get_db();
         results[str_addrs[i]];
-        for (std::string key : keys) {
-          results[str_addrs[i]].push_back(db_addrs[i]->get(key));
+        for(auto & kv : replica_db) {
+          results[str_addrs[i]].push_back(kv.second);
         }
       }
 

@@ -351,10 +351,34 @@ namespace rpc {
 
     return Status::OK;
   }
+
+
+  /**
+   * @brief This method is just for testing, returns the full db key->value map
+  */
+  Status DatabaseRPC::get_db(grpc::ServerContext* context, const database_interface::Empty* request, database_interface::FullDBResponse* response){
+    //response.(app::Database::instance->Get_DB());
+    std::map<string,string> kv = app::Database::instance->Get_DB();
+    *response->mutable_db() = google::protobuf::Map<std::string, std::string>(kv.begin(), kv.end());
+    return Status::OK;
+  }
+
+
 }  // namespace rpc
 
 namespace rpc::call {
   /* Database RPC wrappers ------------------------------------------------------------- */
+
+  google::protobuf::Map<string, string> DatabaseRPCWrapperCall::get_db(){
+    grpc::ClientContext context;
+
+    database_interface::Empty request;
+    database_interface::FullDBResponse response;
+
+    grpc::Status status = this->stub->get_db(&context, request, &response);
+
+    return response.db();
+  }
 
   std::string DatabaseRPCWrapperCall::get(const std::string& s, bool deadline) {
     if(app::Cluster::config->flag.debug){
