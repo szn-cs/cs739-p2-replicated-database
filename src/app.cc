@@ -82,7 +82,10 @@ namespace app {
       Cluster::leader = Cluster::config->getAddress<app::Service::Consensus>().toString();
       return Status::OK;
     } else {
-      sleep(5);
+      std::mt19937_64 eng{std::random_device{}()};     //  seed randomly
+      std::uniform_int_distribution<> dist{10, 5000};  // 10 ms to 5 seconds
+      std::this_thread::sleep_for(std::chrono::milliseconds{dist(eng)});
+
       // Must send get_coordinator requests to other stubs
       // Because this is a call not going explicitly to leader, need to track which
       // nodes are live
@@ -339,11 +342,10 @@ namespace app {
       if (response.first.ok()) {
         num_final_acceptances++;
         acceptance = response.second;
-      }else{
-        if(Cluster::config->flag.debug){
-          std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << 
-            red << "Node" << key << " denied our request, error code " << response.first.error_code() 
-            << " with message " << response.first.error_message() << reset << std::endl;
+      } else {
+        if (Cluster::config->flag.debug) {
+          std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Node" << key << " denied our request, error code " << response.first.error_code()
+                    << " with message " << response.first.error_message() << reset << std::endl;
         }
       }
     }

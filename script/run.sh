@@ -61,7 +61,7 @@ test_leader_functionality() {
 }
 
 test_consistency_no_failure() {
-  CONFIG=5_node_cluster.ini
+  CONFIG=50_node_cluster.ini
 
   for i in {0..49}; do
     ones=$(($i % 10))
@@ -78,7 +78,7 @@ test_consistency_no_failure() {
 
   #### separate stage
 
-  ./target/app -g -m user --command test_consistency_no_failure --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix}
+  ./target/app -g -m user --command test_non_leader_db --config ${CONFIG}
 
   #### separate stage
 
