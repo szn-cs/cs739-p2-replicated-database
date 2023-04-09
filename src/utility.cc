@@ -146,7 +146,8 @@ namespace utility::parse {
 
         // read from configuration file
         auto config_file = variables.at("config").as<std::string>();
-        std::ifstream ifs(config_file.c_str());
+        config->config = config_file;  // update config structure with file path
+        std::ifstream ifs(utility::concatenatePath(executablePath, config_file.c_str()));
         // if (!ifs)
         //   throw std::runtime_error("can not open configuration file: " + config_file);
         if (ifs)
@@ -227,7 +228,6 @@ namespace utility::parse {
 
       // TODO: ensure ip address is valid
 
-
     } catch (const po::error& ex) {
       std::cerr << red << ex.what() << reset << "\n\n";
 
@@ -266,7 +266,6 @@ namespace utility::server {
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Server started" << reset << std::endl;
     server->Wait();
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Server exited" << reset << std::endl;
-    
   }
   template void server::run_gRPC_server<rpc::ConsensusRPC>(utility::parse::Address address);  // explicit initiation - prevent linker errors for separate dec & def of template
   template void server::run_gRPC_server<rpc::DatabaseRPC>(utility::parse::Address address);   // explicit initiation - prevent linker errors for separate dec & def of template

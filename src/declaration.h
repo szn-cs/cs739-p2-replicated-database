@@ -26,6 +26,7 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
+#include <cmath>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -50,8 +51,6 @@ using namespace grpc;
 using grpc::Server, grpc::ServerBuilder, grpc::ServerContext, grpc::ServerReader, grpc::ServerWriter, grpc::Status;  // https://grpc.github.io/grpc/core/md_doc_statuscodes.html
 using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan, termcolor::grey;
 namespace fs = std::filesystem;
-
-
 
 namespace utility {
   // construct a relative path
@@ -105,8 +104,8 @@ namespace rpc {
           : stub(database_interface::DatabaseService::NewStub(channel)) {}
 
       /** database calls*/
-      std::string get(const std::string&, bool=false);
-      Status set(const std::string&, const std::string&, bool=false);
+      std::string get(const std::string&, bool = false);
+      Status set(const std::string&, const std::string&, bool = false);
 
       std::shared_ptr<database_interface::DatabaseService::Stub> stub;
     };
@@ -208,7 +207,8 @@ namespace utility::parse {
      *  2. configuration file
      *  3. default hardcoded values
     */
-  struct Config {  // Declare options that will be allowed both on command line and in config file
+  struct Config {        // Declare options that will be allowed both on command line and in config file
+    std::string config;  // configuration file path that is being read
     std::string ip;
     unsigned short port_database, port_consensus;  // RPC expotred ports
     std::string database_directory;                // directory of database data
@@ -349,7 +349,7 @@ namespace app {
     void Set_Log(const string& key, int round, int a_server, consensus_interface::Operation op, const string& value);  // Acceptor accepts proposal
     consensus_interface::LogEntry new_log();                                                                    // Constructs an empty log entry
     pair<string, int> Find_Max_Proposal(const string& key, int round);
-    
+
     string readFromDisk(string path);
     void writeToDisk(string path, string value);
 
