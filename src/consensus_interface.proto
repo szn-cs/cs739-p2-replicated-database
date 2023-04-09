@@ -5,10 +5,11 @@ package consensus_interface;   // similar to namespace, avoid conflicts
 service ConsensusService { 
   rpc propose(Request) returns (Response) {};
   rpc accept(Request) returns (Response) {};
-  rpc success(Request) returns (Response) {};
+  rpc success(Request) returns (Empty) {};
   rpc ping(Empty) returns (Empty) {};
   rpc get_leader(Empty) returns (GetLeaderResponse) {};
   rpc elect_leader(ElectLeaderRequest) returns (Empty) {};
+  rpc db_address_request(Empty) returns (DbAddressResponse) {};
 }
 
 message Empty {
@@ -44,7 +45,6 @@ message Response {
     int32 aserver_id = 3;
     int32 round = 4;
     Operation op = 5;
-    Status_Types status = 6;
 }
 
 message GetLeaderResponse{
@@ -54,4 +54,8 @@ message GetLeaderResponse{
 message ElectLeaderRequest {
 	string key = 1;
 	string value = 2;
+}
+
+message DbAddressResponse {
+  string addr = 1;
 }

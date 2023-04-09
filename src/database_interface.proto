@@ -14,7 +14,7 @@ message GetRequest {
 }
 
 message GetResponse {
-    string error = 1;
+    int32 error = 1;
     string value = 2;
 }
 

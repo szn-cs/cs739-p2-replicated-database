@@ -43,13 +43,17 @@ int main(int argc, char* argv[]) {
   //std::thread t3(app::Consensus::broadcastPeriodicPing);
 
   // start cluster coordination
-  assert(app::Consensus::coordinate().ok());
+  Status s = app::Consensus::instance->coordinate();
+  if(!s.ok()){
+    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red 
+      << "Unable to initialize node because " << s.error_message() << reset << std::endl;
+  }
 
   t1.join();
   t2.join();
   //t3.join();
 
-  cout << termcolor::grey << utility::getClockTime() << termcolor::reset << endl;
+  cout << termcolor::grey << utility::getClockTime() << "Node exited" << termcolor::reset << endl;
   return 0;
 }
 
@@ -66,28 +70,87 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
 
     std::cout << command + " " + key + " " + value + " send to " + target << std::endl;
     // TODO: create RPC requests to modify the database.
-
-    int r = 0;
     //string db_address = "127.0.1.1:9000";  // target address & port to send grpc requests to.
 
     rpc::call::DatabaseRPCWrapperCall* c = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(target, grpc::InsecureChannelCredentials()));
     // NOTE: above statement equivalent to be equivalent to if proper configs added
-    auto iterator = app::Cluster::memberList->find(target);
-    std::shared_ptr<app::Node> targetNode = iterator->second;
-    std::shared_ptr<rpc::call::DatabaseRPCWrapperCall> c_equivalent = targetNode->databaseEndpoint.stub;
+    // auto iterator = app::Cluster::memberList->find(target);
+    // std::shared_ptr<app::Node> targetNode = iterator->second;
+    // std::shared_ptr<rpc::call::DatabaseRPCWrapperCall> c_equivalent = targetNode->databaseEndpoint.stub;
 
     if (command == "set") {
+      rpc::call::DatabaseRPCWrapperCall* c = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(target, grpc::InsecureChannelCredentials()));
       c->set(key, value);
+
     } else if (command == "get") {
+      rpc::call::DatabaseRPCWrapperCall* c = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(target, grpc::InsecureChannelCredentials()));
       string message = c->get(key);
       std::cout << message << std::endl;
-    }  // TODO: Delete? Should we just have it be a set command with no value?
 
-    return r;
 
-  } else {
-    // TODO: Address what happens if ran improperly
-    std::cout << "Run again with --help." << endl;
-    return 0;
-  }
+    } else if(command == "test_leader_c"){
+      // TODO: Address what happens if ran improperly
+      // std::cout << "Run again with --help." << endl;
+
+      // TODO: This is just for testing, get rid of this stuff
+      string db_address = "127.0.1.1:8000";
+      rpc::call::ConsensusRPCWrapperCall* leader_conn = new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
+
+      // Test ping() when called on leader
+      Status r1 = leader_conn->ping();
+      if(r1.ok()){
+        std::cout << termcolor::cyan << "Ping works" << reset << std::endl;
+      }else{
+        std::cout << termcolor::red << "Ping broken" << reset << std::endl;
+      }
+
+      // Test get_leader() when called on leader
+      std::pair<Status, string> resp = leader_conn->get_leader();
+      std::cout << termcolor::cyan << "get_leader() error code " << resp.first.error_code() <<  " returned leader address: " << resp.second << reset << std::endl;
+
+
+    } else if(command == "test_leader_db"){
+      string db_address = "127.0.1.1:9000";
+      rpc::call::DatabaseRPCWrapperCall* leader_conn = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
+
+      Status s = leader_conn->set("1", "v1");
+      std::cout << termcolor::cyan << "set() error code " << s.error_code() << reset << std::endl;
+
+      std::string g = leader_conn->get("1");
+      std::cout << termcolor::cyan << "value returned was " << g << reset << std::endl;
+
+
+    } else if(command == "test_non_leader_c"){
+      string db_address = "127.0.1.1:8001";
+
+      rpc::call::ConsensusRPCWrapperCall* replica_con = new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
+
+      // Test ping() when called on non leader
+      Status r1 = replica_con->ping();
+      if(r1.ok()){
+        std::cout << termcolor::cyan << "Ping works" << reset << std::endl;
+      }else{
+        std::cout << termcolor::red << "Ping broken" << reset << std::endl;
+      }
+
+      // Test get_leader() when called on non leader
+      std::pair<Status, string> resp = replica_con->get_leader();
+      std::cout << termcolor::cyan << "get_leader() error code " << resp.first.error_code() <<  " returned leader address: " << resp.second << reset << std::endl;
+    
+    } else if(command == "test_non_leader_db"){
+      string db_address = "127.0.1.1:9000";
+      rpc::call::DatabaseRPCWrapperCall* leader_conn = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
+
+      string non_leader_addr = "127.0.1.1:9001";
+      rpc::call::DatabaseRPCWrapperCall* replica_conn = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(non_leader_addr, grpc::InsecureChannelCredentials()));
+      
+      Status s = leader_conn->set("1", "v1");
+      std::cout << termcolor::cyan << "set() error code " << s.error_code() << reset << std::endl;
+
+      std::string g = replica_conn->get("1");
+      std::cout << termcolor::cyan << "value returned was " << g << reset << std::endl;
+    }
+  } 
+
+  return 0;
 }

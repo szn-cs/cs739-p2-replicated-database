@@ -133,6 +133,7 @@ namespace utility::parse {
         primary.add_options()("cluster.address,a", make_value<std::vector<std::string>>(&config->cluster), "Addresses (incl. ports) of consensus cluster participants <address:port>");
         primary.add_options()("flag.debug,g", po::bool_switch(&config->flag.debug)->default_value(false), "Debug flag");
         primary.add_options()("flag.leader", po::bool_switch(&config->flag.leader)->default_value(false), "testing: leader flag");
+        primary.add_options()("flag.local_ubuntu", po::bool_switch(&config->flag.local_ubuntu)->default_value(false), "indicate if running locally on ubuntu, in which case the machine ip is 127.0.0.1");
         primary.add_options()("timeout", po::value<int>(&config->timeout)->default_value(1000), "Timeout in ms");
 
         cmd_options.add(generic).add(primary);  // set options allowed on command line
@@ -262,7 +263,10 @@ namespace utility::server {
 
     // Wait for the server to shutdown. Note that some other thread must be
     // responsible for shutting down the server for this call to ever return.
+    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Server started" << reset << std::endl;
     server->Wait();
+    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Server exited" << reset << std::endl;
+    
   }
   template void server::run_gRPC_server<rpc::ConsensusRPC>(utility::parse::Address address);  // explicit initiation - prevent linker errors for separate dec & def of template
   template void server::run_gRPC_server<rpc::DatabaseRPC>(utility::parse::Address address);   // explicit initiation - prevent linker errors for separate dec & def of template

@@ -47,3 +47,12 @@ test_rpc() {
   ./target/app --mode user --command set --key k2 --value v2 --target 0.0.0.0:8004
   ./target/app --mode user --command get --key k1 --target 0.0.0.0:8000
 }
+
+test_leader_functionality(){
+  ./target/app -g --port_consensus 8000 --port_database 9000 --flag.leader &
+
+  ./target/app --mode user --command test_leader
+
+  fuser -k 8000/tcp
+  fuser -k 9000/tcp
+}

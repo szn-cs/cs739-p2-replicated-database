@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+#include <cmath>
 
 #include <algorithm>
 #include <boost/algorithm/string/classification.hpp>
@@ -83,10 +84,11 @@ namespace rpc {
    public:
     grpc::Status propose(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
     grpc::Status accept(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
-    grpc::Status success(ServerContext*, const consensus_interface::Request*, consensus_interface::Response*) override;
+    grpc::Status success(ServerContext*, const consensus_interface::Request*, consensus_interface::Empty*) override;
     grpc::Status ping(ServerContext*, const consensus_interface::Empty*, consensus_interface::Empty*) override;
     grpc::Status get_leader(ServerContext*, const consensus_interface::Empty*, consensus_interface::GetLeaderResponse*) override;
     grpc::Status elect_leader(ServerContext* context, const consensus_interface::ElectLeaderRequest* request, consensus_interface::Empty* response) override;
+    grpc::Status db_address_request(ServerContext* context, const consensus_interface::Empty* request, consensus_interface::DbAddressResponse* response) override;
   };
 
   namespace call {
@@ -100,8 +102,8 @@ namespace rpc {
           : stub(database_interface::DatabaseService::NewStub(channel)) {}
 
       /** database calls*/
-      std::string get(const std::string&);
-      std::string set(const std::string&, const std::string&);
+      std::string get(const std::string&, bool=false);
+      Status set(const std::string&, const std::string&, bool=false);
 
       std::shared_ptr<database_interface::DatabaseService::Stub> stub;
     };
@@ -116,12 +118,13 @@ namespace rpc {
           : stub(consensus_interface::ConsensusService::NewStub(channel)){};
 
       /** consensus calls */
-      Response propose(const Request);
-      Response accept(const Request);
-      std::string success(const std::string&);
-      Status ping(const std::string&);
+      std::pair<Status, Response> propose(const Request);
+      std::pair<Status, Response> accept(const Request);
+      Status success(const Request);
+      Status ping();
       std::pair<Status, std::string> get_leader();
       Status trigger_election();
+      std::pair<Status, std::string> db_address_request();
 
       std::shared_ptr<consensus_interface::ConsensusService::Stub> stub;
     };
@@ -138,7 +141,7 @@ namespace app {
   };
 
   // TODO: Make this dynamic?
-  #define NUM_REPLICAS 5
+  static int num_replicas;
 
 }  // namespace app
 
@@ -210,6 +213,7 @@ namespace utility::parse {
     struct flag {
       bool debug;  // debug flag
       bool leader;
+      bool local_ubuntu;
     } flag;
     int timeout;
     enum Mode mode;  // can be either "user" or "node"; not sure how to use enums with the library instead.
@@ -310,8 +314,6 @@ namespace app {
 
     // static void getLeader();  // return tuple(bool, Node)
 
-    // TODO: Don't hardcode leader, this is temporary for testing the flow of a get request coming
-    // from db thread. This should be found when protocol starts or whatever
     static std::string leader;
     static pthread_mutex_t leader_mutex;
   };
@@ -370,8 +372,7 @@ namespace app {
       * Other replicas can now contact us (since, if we are running this, we are the leader or an election) to get() the
       * value associated with the key (or the address of the new leader) we just achieved consensus on.
     */
-    template<typename Req>
-    Status AttemptConsensus(const Req&);
+    std::pair<Status, Response> AttemptConsensus(Request);
   };
 
   /**
