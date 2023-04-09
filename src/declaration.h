@@ -336,10 +336,12 @@ namespace app {
     static Status coordinate();
     static Status TriggerElection();
 
-    map<string, map<int, database_interface::LogEntry>> Get_Log();  // Returns current log and db snapshots
+    map<int, database_interface::LogEntry> Get_Log(const string& key);
+
+    database_interface::LogEntry Get_Log(const string& key, int round);  // Returns current log and db snapshots
     // Methods for adding to log at different points during paxos algorithm
-    void Set_Log(const string& key, int round);                                                                // Acceptor receives proposal
-    void Set_Log(const string& key, int round, int p_server);                                                  // Acceptor promises proposal
+    void Set_Log(const string& key, int round);              // Acceptor receives proposal
+    void Set_Log(const string& key, int round, int p_server);// Acceptor promises proposal
     void Set_Log(const string& key, int round, int a_server, database_interface::Operation op, string value);  // Acceptor accepts proposal
     database_interface::LogEntry new_log();                                                                    // Constructs an empty log entry
     pair<string, int> Find_Max_Proposal(const string& key, int round);
