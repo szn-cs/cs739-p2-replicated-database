@@ -10,21 +10,21 @@ namespace app {
   std::shared_ptr<Node> Cluster::currentNode = nullptr;
   std::string Cluster::leader;
   pthread_mutex_t Cluster::leader_mutex;
-  std::map<string, int> Cluster::inCount;
-  std::map<string, int> Cluster::outCount;
+  std::map<string, int> Cluster::incount;
+  std::map<string, int> Cluster::outcount;
 
   void initializeStaticInstance(std::vector<std::string> addressList, std::shared_ptr<utility::parse::Config> config) {
-    Cluster::inCount["propose"] = 0;
-    Cluster::inCount["accept"] = 0;
-    Cluster::inCount["get"] = 0;
-    Cluster::inCount["set"] = 0;
-    Cluster::inCount["success"] = 0;
+    Cluster::incount["propose"] = 0;
+    Cluster::incount["accept"] = 0;
+    Cluster::incount["get"] = 0;
+    Cluster::incount["set"] = 0;
+    Cluster::incount["success"] = 0;
 
-    Cluster::outCount["propose"] = 0;
-    Cluster::outCount["accept"] = 0;
-    Cluster::outCount["get"] = 0;
-    Cluster::outCount["set"] = 0;
-    Cluster::outCount["success"] = 0;
+    Cluster::outcount["propose"] = 0;
+    Cluster::outcount["accept"] = 0;
+    Cluster::outcount["get"] = 0;
+    Cluster::outcount["set"] = 0;
+    Cluster::outcount["success"] = 0;
 
     Cluster::config = config;
 
@@ -96,10 +96,9 @@ namespace app {
       Cluster::leader = Cluster::config->getAddress<app::Service::Consensus>().toString();
       return Status::OK;
     } else {
-      std::mt19937_64 eng{std::random_device{}()};     //  seed randomly
-      std::uniform_int_distribution<> dist{10, 5000};  // 10 ms to 5 seconds
+      std::mt19937_64 eng{std::random_device{}()};    //  seed randomly
+      std::uniform_int_distribution<> dist{1, 5000};  // 1 ms to 5 seconds
       std::this_thread::sleep_for(std::chrono::milliseconds{dist(eng)});
-
 
       // Must send get_coordinator requests to other stubs
       // Because this is a call not going explicitly to leader, need to track which

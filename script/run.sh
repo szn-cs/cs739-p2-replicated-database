@@ -4,6 +4,9 @@
 # copy over binaries from ./target/release
 
 test() {
+  ./target/app --help
+  ./target/app --mode=user --help
+
   # terminal 1
   {
     ./target/app --mode node
@@ -61,19 +64,19 @@ test_leader_functionality() {
 }
 
 test_consistency_no_failure() {
-  CONFIG=50_node_cluster.ini
+  CONFIG=5_node_cluster.ini
+  NUMBER=5
 
-  for i in {0..49}; do
+  for i in {0..$((${NUMBER} - 1))}; do
     ones=$(($i % 10))
     tens=$((${i} / 10 % 10))
     port_suffix="${tens}${ones}"
 
     if [[ $port_suffix == "00" ]]; then
-      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader &
+      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader --flag.coordinate false &
     else
-      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} &
+      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.coordinate false &
     fi
-
   done
 
   #### separate stage

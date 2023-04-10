@@ -10,6 +10,7 @@ service ConsensusService {
   rpc get_leader(Empty) returns (GetLeaderResponse) {};
   rpc elect_leader(ElectLeaderRequest) returns (Empty) {};
   rpc db_address_request(Empty) returns (DbAddressResponse) {};
+  rpc get_stats(Empty) returns (StatisticsResponse) {};
 }
 
 message Empty {
@@ -65,4 +66,10 @@ message LogEntry {
   int32 a_server_id = 2;
   Operation op = 3;
   string accepted_value = 4;
+}
+
+message StatisticsResponse {
+  map<string, int32> incount = 1;
+  map<string, int32> outcount = 2;
+
 }

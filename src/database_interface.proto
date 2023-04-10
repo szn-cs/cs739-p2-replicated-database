@@ -5,6 +5,7 @@ package database_interface;   // similar to namespace, avoid conflicts
 service DatabaseService {
   rpc get(GetRequest) returns (GetResponse) {};
   rpc set(SetRequest) returns (Empty) {};
+  
   rpc get_db(Empty) returns (FullDBResponse) {};
 }
 

@@ -5,7 +5,7 @@ namespace rpc {
   /*ServerContext* context*/
 
   Status ConsensusRPC::propose(ServerContext* context, const consensus_interface::Request* request, consensus_interface::Response* response) {
-    app::Cluster::inCount["propose"] = app::Cluster::inCount["propose"]++;
+    app::Cluster::incount["propose"] = app::Cluster::incount["propose"]++;
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::propose" << reset << std::endl;
 
     // app::Consensus consensus = *app::Consensus::instance;
@@ -69,7 +69,7 @@ namespace rpc {
   }
 
   Status ConsensusRPC::accept(ServerContext* context, const consensus_interface::Request* request, consensus_interface::Response* response) {
-    app::Cluster::inCount["accept"] = app::Cluster::inCount["accept"]++;
+    app::Cluster::incount["accept"] = app::Cluster::incount["accept"]++;
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::accept" << reset << std::endl;
 
     if (context->IsCancelled()) {
@@ -113,7 +113,7 @@ namespace rpc {
   }
 
   Status ConsensusRPC::success(ServerContext* context, const consensus_interface::Request* request, consensus_interface::Empty* response) {
-    app::Cluster::inCount["success"] = app::Cluster::inCount["success"]++;
+    app::Cluster::incount["success"] = app::Cluster::incount["success"]++;
 
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::success" << reset << std::endl;
     if (context->IsCancelled()) {
@@ -207,9 +207,24 @@ namespace rpc {
     return resp.first;
   }
 
+  Status ConsensusRPC::get_stats(ServerContext* context, const consensus_interface::Empty* request, consensus_interface::StatisticsResponse* response) {
+    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPC::get_stats" << reset << std::endl;
+
+    if (context->IsCancelled()) {
+      return Status(grpc::StatusCode::CANCELLED, "Request timed out");
+    }
+
+    google::protobuf::Map<string, int>* incount_map = response->mutable_incount();
+    incount_map->insert(app::Cluster::incount.begin(), app::Cluster::incount.end());
+    google::protobuf::Map<string, int>* outcount_map = response->mutable_outcount();
+    outcount_map->insert(app::Cluster::outcount.begin(), app::Cluster::outcount.end());
+
+    return Status::OK;
+  }
+
   Status DatabaseRPC::get(ServerContext* context, const database_interface::GetRequest* request, database_interface::GetResponse* response) {
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "DatabaseRPC::get" << reset << std::endl;
-    app::Cluster::inCount["get"] = app::Cluster::inCount["get"]++;
+    app::Cluster::incount["get"] = app::Cluster::incount["get"]++;
 
     if (context->IsCancelled()) {
       return Status(grpc::StatusCode::CANCELLED, "Deadline exceeded or Client cancelled, abandoning.");
@@ -279,7 +294,7 @@ namespace rpc {
   }
 
   Status DatabaseRPC::set(ServerContext* context, const database_interface::SetRequest* request, database_interface::Empty* response) {
-    app::Cluster::inCount["set"] = app::Cluster::inCount["set"]++;
+    app::Cluster::incount["set"] = app::Cluster::incount["set"]++;
 
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "DatabaseRPC::set" << reset << std::endl;
 
@@ -366,7 +381,7 @@ namespace rpc::call {
   }
 
   std::string DatabaseRPCWrapperCall::get(const std::string& s, bool deadline) {
-    app::Cluster::outCount["get"] = app::Cluster::outCount["get"]++;
+    app::Cluster::outcount["get"] = app::Cluster::outcount["get"]++;
 
     if (app::Cluster::config->flag.debug) {
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "DatabaseRPCWrapperCall::get" << reset << std::endl;
@@ -396,7 +411,7 @@ namespace rpc::call {
   }
 
   Status DatabaseRPCWrapperCall::set(const std::string& key, const std::string& value, bool deadline) {
-    app::Cluster::outCount["set"] = app::Cluster::outCount["set"]++;
+    app::Cluster::outcount["set"] = app::Cluster::outcount["set"]++;
     if (app::Cluster::config->flag.debug) {
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "DatabaseRPCWrapperCall::set" << reset << std::endl;
     }
@@ -429,7 +444,7 @@ namespace rpc::call {
   /* Consensus RPC wrappers ------------------------------------------------------------- */
 
   std::pair<Status, Response> ConsensusRPCWrapperCall::propose(const Request request) {
-    app::Cluster::outCount["propose"] = app::Cluster::outCount["propose"]++;
+    app::Cluster::outcount["propose"] = app::Cluster::outcount["propose"]++;
 
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPCWrapperCall::propose" << reset << std::endl;
     ClientContext context;
@@ -448,7 +463,7 @@ namespace rpc::call {
   }
 
   std::pair<Status, Response> ConsensusRPCWrapperCall::accept(const Request request) {
-    app::Cluster::outCount["accept"] = app::Cluster::outCount["accept"]++;
+    app::Cluster::outcount["accept"] = app::Cluster::outcount["accept"]++;
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPCWrapperCall::accept" << reset << std::endl;
 
     ClientContext context;
@@ -485,8 +500,31 @@ namespace rpc::call {
     return a;
   }
 
+  std::tuple<Status, std::map<std::string, int>, std::map<std::string, int>> ConsensusRPCWrapperCall::get_stats() {
+    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPCWrapperCall::get_stats" << reset << std::endl;
+
+    ClientContext context;
+    auto deadline =
+        std::chrono::system_clock::now() + std::chrono::milliseconds(5000);
+    context.set_deadline(deadline);
+
+    consensus_interface::Empty request;
+    consensus_interface::StatisticsResponse response;
+
+    grpc::Status status = this->stub->get_stats(&context, request, &response);
+
+    const google::protobuf::Map<std::string, int32_t> grpc_map_in = response.incount();
+    const google::protobuf::Map<std::string, int32_t> grpc_map_out = response.outcount();
+
+    std::map<string, int> standard_map_in(grpc_map_in.begin(), grpc_map_in.end());
+    std::map<string, int> standard_map_out(grpc_map_out.begin(), grpc_map_out.end());
+
+    std::tuple<Status, std::map<std::string, int>, std::map<std::string, int>> t = std::make_tuple(status, standard_map_in, standard_map_out);
+    return t;
+  }
+
   Status ConsensusRPCWrapperCall::success(const Request request) {
-    app::Cluster::outCount["success"] = app::Cluster::outCount["success"]++;
+    app::Cluster::outcount["success"] = app::Cluster::outcount["success"]++;
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "ConsensusRPCWrapperCall::success" << reset << std::endl;
 
     grpc::ClientContext context;
@@ -522,7 +560,7 @@ namespace rpc::call {
 
     grpc::ClientContext context;
     auto deadline =
-        std::chrono::system_clock::now() + std::chrono::milliseconds(app::Cluster::config->timeout);
+        std::chrono::system_clock::now() + std::chrono::milliseconds(app::Cluster::config->flag.timeout);
     context.set_deadline(deadline);
 
     consensus_interface::Empty request;

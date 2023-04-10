@@ -90,6 +90,7 @@ namespace rpc {
     grpc::Status get_leader(ServerContext*, const consensus_interface::Empty*, consensus_interface::GetLeaderResponse*) override;
     grpc::Status elect_leader(ServerContext* context, const consensus_interface::ElectLeaderRequest* request, consensus_interface::Empty* response) override;
     grpc::Status db_address_request(ServerContext* context, const consensus_interface::Empty* request, consensus_interface::DbAddressResponse* response) override;
+    grpc::Status get_stats(ServerContext* context, const consensus_interface::Empty* request, consensus_interface::StatisticsResponse* response) override;
   };
 
   namespace call {
@@ -127,6 +128,7 @@ namespace rpc {
       std::pair<Status, std::string> get_leader();
       Status trigger_election();
       std::pair<Status, std::string> db_address_request();
+      std::tuple<Status, std::map<std::string, int>, std::map<std::string, int>> get_stats();
 
       std::shared_ptr<consensus_interface::ConsensusService::Stub> stub;
     };
@@ -213,15 +215,16 @@ namespace utility::parse {
     unsigned short port_database, port_consensus;  // RPC expotred ports
     std::string database_directory;                // directory of database data
     std::vector<std::string> cluster;              // addresses of nodes in cluster
+    enum Mode mode;                                // can be either "user" or "node"; not sure how to use enums with the library instead.
     struct flag {
       bool debug;  // debug flag
       bool leader;
       bool local_ubuntu;
+      bool latency;
+      bool coordinate;  // trigger election on strart-up
+      int timeout;
+      int failrate;
     } flag;
-    int timeout;
-    enum Mode mode;  // can be either "user" or "node"; not sure how to use enums with the library instead.
-    int failrate;
-    bool latency;
 
     // TODO: fail rate, and testing configs
     // TODO: if needed
@@ -323,8 +326,8 @@ namespace app {
     static pthread_mutex_t leader_mutex;
 
     // count RPCs
-    static std::map<std::string, int> inCount;
-    static std::map<std::string, int> outCount;
+    static std::map<std::string, int> incount;
+    static std::map<std::string, int> outcount;
   };
 
   void initializeStaticInstance(std::vector<std::string> addressList, std::shared_ptr<utility::parse::Config> config);
