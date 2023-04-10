@@ -64,8 +64,8 @@ test_leader_functionality() {
 }
 
 test_consistency_no_failure() {
-  CONFIG=5_node_cluster.ini
-  NUMBER=5
+  CONFIG=10_node_cluster.ini
+  NUMBER=10
 
   for i in {0..$((${NUMBER} - 1))}; do
     ones=$(($i % 10))
@@ -73,15 +73,15 @@ test_consistency_no_failure() {
     port_suffix="${tens}${ones}"
 
     if [[ $port_suffix == "00" ]]; then
-      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader --flag.coordinate false &
+      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader &
     else
-      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.coordinate false &
+      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} &
     fi
   done
 
   #### separate stage
 
-  ./target/app -g -m user --command test_non_leader_db --config ${CONFIG}
+  ./target/app -g -m user --command test_1000_random_ops --config ${CONFIG}
   ./target/app -g -m user --command test_count --config ${CONFIG}
 
   #### separate stage

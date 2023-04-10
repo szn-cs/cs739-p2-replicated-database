@@ -144,9 +144,6 @@ namespace app {
     Consensus
   };
 
-  // TODO: Make this dynamic?
-  static int num_replicas;
-
 }  // namespace app
 
 namespace utility::parse {
@@ -221,7 +218,7 @@ namespace utility::parse {
       bool leader;
       bool local_ubuntu;
       bool latency;
-      bool coordinate;  // trigger election on strart-up
+      bool election;  // trigger election on strart-up
       int timeout;
       int failrate;
     } flag;

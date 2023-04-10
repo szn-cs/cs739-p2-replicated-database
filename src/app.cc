@@ -73,9 +73,8 @@ namespace app {
     // Consensus::instance = std::make_shared<Consensus>();
     // Database::instance = std::make_shared<Database>();
 
-    num_replicas = l.size();
     if (Cluster::config->flag.debug)
-      std::cout << "There are " << num_replicas << " replicas." << reset << std::endl;
+      std::cout << "There are " << Cluster::memberList->size() << " replicas." << reset << std::endl;
   }
 
 }  // namespace app
@@ -132,7 +131,7 @@ namespace app {
       pthread_mutex_lock(&(Cluster::leader_mutex));
       Cluster::leader = *leaders.begin();
       pthread_mutex_unlock(&(Cluster::leader_mutex));
-    } else {
+    } else if (Cluster::config->flag.election) {
       // Send an election request to ourself
       if (Cluster::config->flag.debug)
         std::cout << termcolor::blue << "No valid leader returned by any server, starting election. " << leaders.size() << " leaders were suggested." << reset << endl;
@@ -142,11 +141,11 @@ namespace app {
         status = Status(grpc::StatusCode::ABORTED, "we could not establish a leader, not enough nodes.");
     }
 
-    // TODO: Recovery goes here
-
     if (!status.ok())
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
                 << "Unable to initialize node because " << status.error_message() << reset << std::endl;
+
+    // TODO: Recovery goes here
 
     return;
   }
@@ -259,6 +258,8 @@ namespace app {
   std::pair<Status, Response> Consensus::AttemptConsensus(consensus_interface::Request r) {
     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset
               << yellow << "Consensus::AttemptConsensus for key " << r.key() << " value: " << r.value() << reset << std::endl;
+
+    int num_replicas = Cluster::memberList->size();
 
     std::string key = r.key();
     std::string value = r.value();

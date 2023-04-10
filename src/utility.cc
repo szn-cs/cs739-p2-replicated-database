@@ -137,7 +137,7 @@ namespace utility::parse {
         primary.add_options()("flag.timeout", po::value<int>(&config->flag.timeout)->default_value(1000), "Timeout in ms");
         primary.add_options()("flag.failrate", po::value<int>(&config->flag.failrate)->default_value(0), "Failrate: percentile");
         primary.add_options()("flag.latency", po::bool_switch(&config->flag.latency)->default_value(false), "latency flag: allow for random latency in local machine testing");
-        primary.add_options()("flag.coordinate", po::bool_switch(&config->flag.coordinate)->default_value(true), "latency flag: allow for random latency in local machine testing");
+        primary.add_options()("flag.election", po::bool_switch(&config->flag.election)->default_value(true), "latency flag: allow for random latency in local machine testing");
 
         cmd_options.add(generic).add(primary);  // set options allowed on command line
         file_options.add(primary);              // set options allowed in config file

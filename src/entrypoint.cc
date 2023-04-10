@@ -46,8 +46,7 @@ int main(int argc, char* argv[]) {
   //std::thread t3(app::Consensus::broadcastPeriodicPing);
 
   // start cluster coordination
-  if (config->flag.coordinate)
-    app::Consensus::instance->coordinate();
+  app::Consensus::instance->coordinate();
 
   t1.join();
   t2.join();
