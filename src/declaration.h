@@ -221,6 +221,7 @@ namespace utility::parse {
     int timeout;
     enum Mode mode;  // can be either "user" or "node"; not sure how to use enums with the library instead.
     int failrate;
+    bool latency;
 
     // TODO: fail rate, and testing configs
     // TODO: if needed
