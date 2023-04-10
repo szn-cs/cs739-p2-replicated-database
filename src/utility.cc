@@ -124,7 +124,7 @@ namespace utility::parse {
         po::options_description primary("Main program options");
 
         generic.add_options()("help,h", "CMD options list");
-        generic.add_options()("config", po::value<std::string>()->default_value(utility::concatenatePath(executablePath, "./node.ini")), "Configuration file");
+        generic.add_options()("config", po::value<std::string>(), "Configuration file");
         generic.add_options()("mode,m", po::value<EnumOption<Mode>>(), "Mode of execution: either `node` or `user`");
 
         primary.add_options()("port_database", po::value<unsigned short>(&config->port_database)->default_value(9000), "Port of database RPC service");
@@ -148,16 +148,20 @@ namespace utility::parse {
         po::store(po::command_line_parser(argc, argv).options(cmd_options).allow_unregistered().run(), variables);
 
         // read from configuration file
-        auto config_file = variables.at("config").as<std::string>();
-        config->config = config_file;  // update config structure with file path
-        std::ifstream ifs(utility::concatenatePath(executablePath, config_file.c_str()));
-        // if (!ifs)
-        //   throw std::runtime_error("can not open configuration file: " + config_file);
-        if (ifs)
-          po::store(po::parse_config_file(ifs, file_options, true), variables);
-        po::notify(variables);
-        ifs.close();
+        if (variables.count("config")) {
+          // string config_default = utility::concatenatePath(executablePath, "./node.ini");
+          auto config_file = variables.at("config").as<std::string>();
+          config->config = config_file;  // update config structure with file path
+          std::ifstream ifs(utility::concatenatePath(executablePath, config_file.c_str()));
+          // if (!ifs)
+          //   throw std::runtime_error("can not open configuration file: " + config_file);
+          if (ifs)
+            po::store(po::parse_config_file(ifs, file_options, true), variables);
+          ifs.close();
+        }
       }
+
+      po::notify(variables);
 
       // copy manually the variables:
       config->mode = (variables.count("mode")) ? variables["mode"].as<EnumOption<Mode>>().value : Mode::NODE;

@@ -46,13 +46,8 @@ int main(int argc, char* argv[]) {
   //std::thread t3(app::Consensus::broadcastPeriodicPing);
 
   // start cluster coordination
-  if (config->flag.coordinate) {
-    Status s = app::Consensus::instance->coordinate();
-    if (!s.ok()) {
-      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
-                << "Unable to initialize node because " << s.error_message() << reset << std::endl;
-    }
-  }
+  if (config->flag.coordinate)
+    app::Consensus::instance->coordinate();
 
   t1.join();
   t2.join();

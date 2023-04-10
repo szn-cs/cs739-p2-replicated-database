@@ -345,7 +345,7 @@ namespace app {
     /** send RPC pings to all cluster nodes */
     static void broadcastPeriodicPing();
     /** create stub instances for each of the cluster nodes. */
-    static Status coordinate();
+    static void coordinate();
     static Status TriggerElection();
 
     map<string, map<int, consensus_interface::LogEntry>> Get_Log();

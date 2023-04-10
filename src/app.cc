@@ -44,9 +44,8 @@ namespace app {
     }
 
     num_replicas = l.size();
-    if (Cluster::config->flag.debug) {
+    if (Cluster::config->flag.debug)
       std::cout << "There are " << num_replicas << " replicas." << reset << std::endl;
-    }
 
     // current node's details
     utility::parse::Address addressConsensus = Cluster::config->flag.local_ubuntu ?  // If local ubuntu
@@ -86,68 +85,70 @@ namespace app {
   // initialized in class instead.
   // std::shared_ptr<Consensus> Consensus::instance = nullptr;
 
-  Status Consensus::coordinate() {
-    if (Cluster::config->flag.leader) {
-      if (Cluster::config->flag.debug) {
-        std::cout << termcolor::blue << "I am the leader, address " << Cluster::config->getAddress<app::Service::Consensus>().toString() << reset << endl;
-      }
+  void Consensus::coordinate() {
+    Status status = Status::OK;
 
+    if (Cluster::config->flag.leader) {
       // Can use self to indicate if this replica is a leader, an address otherwise
       Cluster::leader = Cluster::config->getAddress<app::Service::Consensus>().toString();
-      return Status::OK;
-    } else {
-      std::mt19937_64 eng{std::random_device{}()};    //  seed randomly
-      std::uniform_int_distribution<> dist{1, 5000};  // 1 ms to 5 seconds
-      std::this_thread::sleep_for(std::chrono::milliseconds{dist(eng)});
 
-      // Must send get_coordinator requests to other stubs
-      // Because this is a call not going explicitly to leader, need to track which
-      // nodes are live
-      if (Cluster::config->flag.debug) {
-        std::cout << termcolor::blue << "I am not the leader" << reset << endl;
-      }
-      std::set<std::string> leaders;
-      std::set<std::string> live_replicas;
-      for (const auto& [key, node] : *(Cluster::memberList)) {
-        if (Cluster::config->flag.debug) {
-          std::cout << termcolor::blue << "get_leader() request to " << key << reset << endl;
-        }
-        std::pair<Status, std::string> res = node->consensusEndpoint.stub->get_leader();
-        if (res.first.ok()) {  // Replica is up
-          live_replicas.insert(key);
-          if (!res.second.empty()) {  // Replica knows the current leader
-            leaders.insert(res.second);
-          }
-        }
-      }
+      if (Cluster::config->flag.debug)
+        std::cout << termcolor::blue << "I am the leader, address " << Cluster::config->getAddress<app::Service::Consensus>().toString() << reset << endl;
 
-      // leaders.size() will be 1 or 0, unless consensus issues
-      // If 0, trigger an election
-      // Check if leader is alive, if not return a non ok status to trigger an election
-      if (leaders.size() == 1 && live_replicas.find(*leaders.begin()) != live_replicas.end()) {
-        if (Cluster::config->flag.debug) {
-          std::cout << termcolor::blue << "Valid leader returned." << reset << endl;
-        }
-
-        pthread_mutex_lock(&(Cluster::leader_mutex));
-        Cluster::leader = *leaders.begin();
-        pthread_mutex_unlock(&(Cluster::leader_mutex));
-      } else {
-        // Send an election request to ourself
-        if (Cluster::config->flag.debug) {
-          std::cout << termcolor::blue << "No valid leader returned by any server, starting election. "
-                    << leaders.size() << " leaders were suggested." << reset << endl;
-        }
-
-        Status election_status = Cluster::currentNode->consensusEndpoint.stub->trigger_election();
-        if (!election_status.ok()) {
-          return Status(grpc::StatusCode::ABORTED, "we could not establish a leader, not enough nodes.");
-        }
-      }
-
-      // TODO: Recovery goes here
-      return Status::OK;
+      return;
     }
+
+    std::mt19937_64 eng{std::random_device{}()};    //  seed randomly
+    std::uniform_int_distribution<> dist{1, 5000};  // 1 ms to 5 seconds
+    std::this_thread::sleep_for(std::chrono::milliseconds{dist(eng)});
+
+    // Must send get_coordinator requests to other stubs
+    // Because this is a call not going explicitly to leader, need to track which
+    // nodes are live
+    if (Cluster::config->flag.debug)
+      std::cout << termcolor::blue << "I am not the leader" << reset << endl;
+
+    std::set<std::string> leaders;
+    std::set<std::string> live_replicas;
+    for (const auto& [key, node] : *(Cluster::memberList)) {
+      if (Cluster::config->flag.debug) {
+        std::cout << termcolor::blue << "get_leader() request to " << key << reset << endl;
+      }
+      std::pair<Status, std::string> res = node->consensusEndpoint.stub->get_leader();
+      if (res.first.ok()) {  // Replica is up
+        live_replicas.insert(key);
+        if (!res.second.empty())  // Replica knows the current leader
+          leaders.insert(res.second);
+      }
+    }
+
+    // leaders.size() will be 1 or 0, unless consensus issues
+    // If 0, trigger an election
+    // Check if leader is alive, if not return a non ok status to trigger an election
+    if (leaders.size() == 1 && live_replicas.find(*leaders.begin()) != live_replicas.end()) {
+      if (Cluster::config->flag.debug)
+        std::cout << termcolor::blue << "Valid leader returned." << reset << endl;
+
+      pthread_mutex_lock(&(Cluster::leader_mutex));
+      Cluster::leader = *leaders.begin();
+      pthread_mutex_unlock(&(Cluster::leader_mutex));
+    } else {
+      // Send an election request to ourself
+      if (Cluster::config->flag.debug)
+        std::cout << termcolor::blue << "No valid leader returned by any server, starting election. " << leaders.size() << " leaders were suggested." << reset << endl;
+
+      Status election_status = Cluster::currentNode->consensusEndpoint.stub->trigger_election();
+      if (!election_status.ok())
+        status = Status(grpc::StatusCode::ABORTED, "we could not establish a leader, not enough nodes.");
+    }
+
+    // TODO: Recovery goes here
+
+    if (!status.ok())
+      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
+                << "Unable to initialize node because " << status.error_message() << reset << std::endl;
+
+    return;
   }
 
   void Consensus::broadcastPeriodicPing() {
