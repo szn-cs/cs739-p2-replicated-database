@@ -224,6 +224,23 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
         copy(value.begin(), value.end(), ostream_iterator<std::string>(std::cout, " "));
         std::cout << reset << endl;
       }
+    } else if (command == "test_count") {
+      cout << "inCount: " << endl;
+
+      for (auto const& x : app::Cluster::inCount) {
+        std::cout << x.first  // string (key)
+                  << ':'
+                  << x.second  // string's value
+                  << std::endl;
+      }
+
+      cout << "outCount: " << endl;
+      for (auto const& x : app::Cluster::outCount) {
+        std::cout << x.first  // string (key)
+                  << ':'
+                  << x.second  // string's value
+                  << std::endl;
+      }
     }
   }
 

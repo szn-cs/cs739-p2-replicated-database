@@ -79,6 +79,7 @@ test_consistency_no_failure() {
   #### separate stage
 
   ./target/app -g -m user --command test_non_leader_db --config ${CONFIG}
+  ./target/app -g -m user --command test_count --config ${CONFIG}
 
   #### separate stage
 

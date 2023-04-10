@@ -10,8 +10,22 @@ namespace app {
   std::shared_ptr<Node> Cluster::currentNode = nullptr;
   std::string Cluster::leader;
   pthread_mutex_t Cluster::leader_mutex;
+  std::map<string, int> Cluster::inCount;
+  std::map<string, int> Cluster::outCount;
 
   void initializeStaticInstance(std::vector<std::string> addressList, std::shared_ptr<utility::parse::Config> config) {
+    Cluster::inCount["propose"] = 0;
+    Cluster::inCount["accept"] = 0;
+    Cluster::inCount["get"] = 0;
+    Cluster::inCount["set"] = 0;
+    Cluster::inCount["success"] = 0;
+
+    Cluster::outCount["propose"] = 0;
+    Cluster::outCount["accept"] = 0;
+    Cluster::outCount["get"] = 0;
+    Cluster::outCount["set"] = 0;
+    Cluster::outCount["success"] = 0;
+
     Cluster::config = config;
 
     Cluster::memberList = std::make_shared<std::map<std::string, std::shared_ptr<Node>>>();
