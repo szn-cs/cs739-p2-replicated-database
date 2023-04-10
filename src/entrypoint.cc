@@ -213,8 +213,8 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
 
       std::map<std::string, std::vector<std::string>> results;
       for (unsigned long i = 0; i < db_addrs.size(); i++) {
-        google::protobuf::Map<string,string> res = db_addrs[i]->get_db();
-        for (auto & kb : res) {
+        google::protobuf::Map<string, string> res = db_addrs[i]->get_db();
+        for (auto& kb : res) {
           results[str_addrs[i]].push_back(kb.second);
         }
       }
@@ -275,8 +275,8 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
         int replica_idx = rand() % db_addrs.size();
         int key_idx = rand() % keys.size();
         Status s = db_addrs[replica_idx]->set(keys[key_idx], result);
-        if(!s.ok()){
-          std::cout << reset << red << "Set(" << keys[key_idx] << ", " << result << ") failed" << reset << endl; 
+        if (!s.ok()) {
+          std::cout << reset << red << "Set(" << keys[key_idx] << ", " << result << ") failed" << reset << endl;
         }
       }
 
@@ -294,7 +294,23 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
         copy(value.begin(), value.end(), ostream_iterator<std::string>(std::cout, " "));
         std::cout << reset << endl;
       }
+    } else if (command == "test_count") {
+      cout << "inCount: " << endl;
 
+      for (auto const& x : app::Cluster::inCount) {
+        std::cout << x.first  // string (key)
+                  << ':'
+                  << x.second  // string's value
+                  << std::endl;
+      }
+
+      cout << "outCount: " << endl;
+      for (auto const& x : app::Cluster::outCount) {
+        std::cout << x.first  // string (key)
+                  << ':'
+                  << x.second  // string's value
+                  << std::endl;
+      }
     }
   }
 

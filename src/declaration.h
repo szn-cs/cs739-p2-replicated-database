@@ -319,6 +319,10 @@ namespace app {
 
     static std::string leader;
     static pthread_mutex_t leader_mutex;
+
+    // count RPCs
+    static std::map<std::string, int> inCount;
+    static std::map<std::string, int> outCount;
   };
 
   void initializeStaticInstance(std::vector<std::string> addressList, std::shared_ptr<utility::parse::Config> config);
