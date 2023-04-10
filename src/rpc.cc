@@ -43,7 +43,7 @@ namespace rpc {
       return Status(grpc::StatusCode::ABORTED, "Proposal is out of date.");
     } 
 
-    // see if there exists an accepted value for the given key and round
+    // // see if there exists an accepted value for the given key and round
 
     if (pax_log.a_server_id() > 0) {
 
@@ -94,14 +94,14 @@ namespace rpc {
 
     consensus_interface::LogEntry pax_log = app::Consensus::instance->Get_Log(key, round);
 
-    if (pax_log.p_server_id() > pserver_id) {
-      if(app::Cluster::config->flag.debug){
-        std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << 
-          red << "Denied Acceptance. Log p_server_id is " << pax_log.p_server_id() 
-          << " while the new p_server_id is " << pserver_id << reset << std::endl;
-      }
-      return Status(grpc::StatusCode::ABORTED, "Accept request is out of date.");
-    }
+    // if (pax_log.p_server_id() > pserver_id) {
+    //   if(app::Cluster::config->flag.debug){
+    //     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << 
+    //       red << "Denied Acceptance. Log p_server_id is " << pax_log.p_server_id() 
+    //       << " while the new p_server_id is " << pserver_id << reset << std::endl;
+    //   }
+    //   return Status(grpc::StatusCode::ABORTED, "Accept request is out of date.");
+    // }
 
     response->set_op(op);
     response->set_value(value);
