@@ -43,10 +43,6 @@ namespace app {
       Cluster::memberList->insert(std::make_pair(a.toString(), std::make_shared<Node>(a.toString(), db_addr)));
     }
 
-    num_replicas = l.size();
-    if (Cluster::config->flag.debug)
-      std::cout << "There are " << num_replicas << " replicas." << reset << std::endl;
-
     // current node's details
     utility::parse::Address addressConsensus = Cluster::config->flag.local_ubuntu ?  // If local ubuntu
                                                    utility::parse::make_address("127.0.1.1:" + std::to_string(Cluster::config->port_consensus))
@@ -76,6 +72,10 @@ namespace app {
     // instance initialization taken care of in the class definition.
     // Consensus::instance = std::make_shared<Consensus>();
     // Database::instance = std::make_shared<Database>();
+
+    num_replicas = l.size();
+    if (Cluster::config->flag.debug)
+      std::cout << "There are " << num_replicas << " replicas." << reset << std::endl;
   }
 
 }  // namespace app

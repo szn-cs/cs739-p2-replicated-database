@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
 
 /** User execution for testing the RPC servers */
 int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::program_options::variables_map& variables) {
-  //   ./target/app --mode user --command set --key k1 --value v1 --target 0.0.0.0:8002
+  //   ./target/app --mode user --command set --key k1 --value v1 --target 127.0.1.1:8002
   if (!variables.count("command"))
     throw "`command` argument is required";
 
