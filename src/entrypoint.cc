@@ -224,13 +224,18 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
         copy(value.begin(), value.end(), ostream_iterator<std::string>(std::cout, " "));
         std::cout << reset << endl;
       }
-    } else if (command == "test_5_random_ops") {
+    } else if (command == "test_1000_random_ops") {
       std::vector<rpc::call::DatabaseRPCWrapperCall*> db_addrs;
       db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9000", grpc::InsecureChannelCredentials())));
       db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9001", grpc::InsecureChannelCredentials())));
       db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9002", grpc::InsecureChannelCredentials())));
       db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9003", grpc::InsecureChannelCredentials())));
       db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9004", grpc::InsecureChannelCredentials())));
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9005", grpc::InsecureChannelCredentials())));
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9006", grpc::InsecureChannelCredentials())));
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9007", grpc::InsecureChannelCredentials())));
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9008", grpc::InsecureChannelCredentials())));
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9009", grpc::InsecureChannelCredentials())));
 
       std::vector<std::string> str_addrs;
       str_addrs.push_back("127.0.1.1:9000");
@@ -238,6 +243,11 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       str_addrs.push_back("127.0.1.1:9002");
       str_addrs.push_back("127.0.1.1:9003");
       str_addrs.push_back("127.0.1.1:9004");
+      str_addrs.push_back("127.0.1.1:9005");
+      str_addrs.push_back("127.0.1.1:9006");
+      str_addrs.push_back("127.0.1.1:9007");
+      str_addrs.push_back("127.0.1.1:9008");
+      str_addrs.push_back("127.0.1.1:9009");
 
       std::vector<std::string> keys;
       keys.push_back("a");
@@ -271,7 +281,7 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       }
 
       std::map<std::string, std::vector<std::string>> results;
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < str_addrs.size(); i++) {
         google::protobuf::Map<string,string> r = db_addrs[i]->get_db();
         results[str_addrs[i]];
         for (std::string key : keys) {

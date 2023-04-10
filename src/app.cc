@@ -86,6 +86,7 @@ namespace app {
       std::uniform_int_distribution<> dist{10, 5000};  // 10 ms to 5 seconds
       std::this_thread::sleep_for(std::chrono::milliseconds{dist(eng)});
 
+
       // Must send get_coordinator requests to other stubs
       // Because this is a call not going explicitly to leader, need to track which
       // nodes are live
