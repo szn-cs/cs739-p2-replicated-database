@@ -220,6 +220,7 @@ namespace utility::parse {
     } flag;
     int timeout;
     enum Mode mode;  // can be either "user" or "node"; not sure how to use enums with the library instead.
+    int failrate;
 
     // TODO: fail rate, and testing configs
     // TODO: if needed

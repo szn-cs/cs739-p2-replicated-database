@@ -135,6 +135,7 @@ namespace utility::parse {
         primary.add_options()("flag.leader", po::bool_switch(&config->flag.leader)->default_value(false), "testing: leader flag");
         primary.add_options()("flag.local_ubuntu", po::bool_switch(&config->flag.local_ubuntu)->default_value(false), "indicate if running locally on ubuntu, in which case the machine ip is 127.0.0.1");
         primary.add_options()("timeout", po::value<int>(&config->timeout)->default_value(1000), "Timeout in ms");
+        primary.add_options()("failrate,-r", po::value<int>(&config->failrate)->default_value(0), "Failrate: percentile");
 
         cmd_options.add(generic).add(primary);  // set options allowed on command line
         file_options.add(primary);              // set options allowed in config file

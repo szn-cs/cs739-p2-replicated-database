@@ -282,7 +282,7 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
 
       std::map<std::string, std::vector<std::string>> results;
       for (int i = 0; i < str_addrs.size(); i++) {
-        google::protobuf::Map<string,string> r = db_addrs[i]->get_db();
+        google::protobuf::Map<string, string> r = db_addrs[i]->get_db();
         results[str_addrs[i]];
         for (std::string key : keys) {
           results[str_addrs[i]].push_back(r[key]);

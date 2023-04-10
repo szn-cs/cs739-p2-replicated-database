@@ -92,24 +92,14 @@ namespace rpc {
 
     consensus_interface::LogEntry pax_log = app::Consensus::instance->Get_Log(key, round);
 
-<<<<<<< HEAD
-    if (pax_log.p_server_id() > pserver_id) {
-      if (app::Cluster::config->flag.debug) {
-        std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Denied Acceptance. Log p_server_id is " << pax_log.p_server_id()
-                  << " while the new p_server_id is " << pserver_id << reset << std::endl;
-      }
-      return Status(grpc::StatusCode::ABORTED, "Accept request is out of date.");
-    }
-=======
     // if (pax_log.p_server_id() > pserver_id) {
     //   if(app::Cluster::config->flag.debug){
-    //     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << 
-    //       red << "Denied Acceptance. Log p_server_id is " << pax_log.p_server_id() 
+    //     std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset <<
+    //       red << "Denied Acceptance. Log p_server_id is " << pax_log.p_server_id()
     //       << " while the new p_server_id is " << pserver_id << reset << std::endl;
     //   }
     //   return Status(grpc::StatusCode::ABORTED, "Accept request is out of date.");
     // }
->>>>>>> e3a41b1068a3f4c10c93ac4a77ecd68b8f988ff7
 
     response->set_op(op);
     response->set_value(value);
@@ -349,24 +339,22 @@ namespace rpc {
     return Status::OK;
   }
 
-
   /**
    * @brief This method is just for testing, returns the full db key->value map
   */
-  Status DatabaseRPC::get_db(grpc::ServerContext* context, const database_interface::Empty* request, database_interface::FullDBResponse* response){
+  Status DatabaseRPC::get_db(grpc::ServerContext* context, const database_interface::Empty* request, database_interface::FullDBResponse* response) {
     //response.(app::Database::instance->Get_DB());
-    std::map<string,string> kv = app::Database::instance->Get_DB();
+    std::map<string, string> kv = app::Database::instance->Get_DB();
     *response->mutable_db() = google::protobuf::Map<std::string, std::string>(kv.begin(), kv.end());
     return Status::OK;
   }
-
 
 }  // namespace rpc
 
 namespace rpc::call {
   /* Database RPC wrappers ------------------------------------------------------------- */
 
-  google::protobuf::Map<string, string> DatabaseRPCWrapperCall::get_db(){
+  google::protobuf::Map<string, string> DatabaseRPCWrapperCall::get_db() {
     grpc::ClientContext context;
 
     database_interface::Empty request;
