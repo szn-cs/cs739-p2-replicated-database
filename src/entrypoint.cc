@@ -169,12 +169,9 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
     string address_leader = res.second;
     std::cout << "Leader is: " << address_leader << std::endl;
 
-    std::vector<rpc::call::DatabaseRPCWrapperCall*> db_addrs;
-    std::vector<std::string> str_addrs;
-    for (const auto& [key, node] : *(app::Cluster::memberList)) {
-      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(node->databaseEndpoint.address, grpc::InsecureChannelCredentials())));
-      str_addrs.push_back(node->databaseEndpoint.address);
-    }
+    std::vector<app::Endpoint<rpc::call::DatabaseRPCWrapperCall>> endpoints;
+    for (const auto& [key, node] : *(app::Cluster::memberList))
+      endpoints.push_back(node->databaseEndpoint);
 
     std::vector<std::string> keys;
     keys.push_back("a");
@@ -199,19 +196,19 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       for (int i = 0; i < 5; i++) {
         result = result + alpha[rand() % 26];
       }
-      int replica_idx = rand() % db_addrs.size();
+      int replica_idx = rand() % endpoints.size();
       int key_idx = rand() % keys.size();
-      Status s = db_addrs[replica_idx]->set(keys[key_idx], result);
+      Status s = endpoints[replica_idx].stub->set(keys[key_idx], result);
       if (!s.ok()) {
         std::cout << reset << red << "Set(" << keys[key_idx] << ", " << result << ") failed" << reset << endl;
       }
     }
 
     std::map<std::string, std::vector<std::string>> results;
-    for (unsigned long i = 0; i < db_addrs.size(); i++) {
-      google::protobuf::Map<string, string> res = db_addrs[i]->get_db();
+    for (auto endpoint : endpoints) {
+      google::protobuf::Map<string, string> res = endpoint.stub->get_db();
       for (auto& kb : res) {
-        results[str_addrs[i]].push_back(kb.second);
+        results[endpoint.address].push_back(kb.second);
       }
     }
 
@@ -221,29 +218,9 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       std::cout << reset << endl;
     }
   } else if (command == "test_1000_random_ops") {
-    std::vector<rpc::call::DatabaseRPCWrapperCall*> db_addrs;
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9000", grpc::InsecureChannelCredentials())));
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9001", grpc::InsecureChannelCredentials())));
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9002", grpc::InsecureChannelCredentials())));
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9003", grpc::InsecureChannelCredentials())));
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9004", grpc::InsecureChannelCredentials())));
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9005", grpc::InsecureChannelCredentials())));
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9006", grpc::InsecureChannelCredentials())));
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9007", grpc::InsecureChannelCredentials())));
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9008", grpc::InsecureChannelCredentials())));
-    db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9009", grpc::InsecureChannelCredentials())));
-
-    std::vector<std::string> str_addrs;
-    str_addrs.push_back("127.0.1.1:9000");
-    str_addrs.push_back("127.0.1.1:9001");
-    str_addrs.push_back("127.0.1.1:9002");
-    str_addrs.push_back("127.0.1.1:9003");
-    str_addrs.push_back("127.0.1.1:9004");
-    str_addrs.push_back("127.0.1.1:9005");
-    str_addrs.push_back("127.0.1.1:9006");
-    str_addrs.push_back("127.0.1.1:9007");
-    str_addrs.push_back("127.0.1.1:9008");
-    str_addrs.push_back("127.0.1.1:9009");
+    std::vector<app::Endpoint<rpc::call::DatabaseRPCWrapperCall>> endpoints;
+    for (const auto& [key, node] : *(app::Cluster::memberList))
+      endpoints.push_back(node->databaseEndpoint);
 
     std::vector<std::string> keys;
     keys.push_back("a");
@@ -268,20 +245,20 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       for (int i = 0; i < 5; i++) {
         result = result + alpha[rand() % 26];
       }
-      int replica_idx = rand() % db_addrs.size();
+      int replica_idx = rand() % endpoints.size();
       int key_idx = rand() % keys.size();
-      Status s = db_addrs[replica_idx]->set(keys[key_idx], result);
+      Status s = endpoints[replica_idx].stub->set(keys[key_idx], result);
       if (!s.ok()) {
         std::cout << reset << red << "Set(" << keys[key_idx] << ", " << result << ") failed" << reset << endl;
       }
     }
 
     std::map<std::string, std::vector<std::string>> results;
-    for (int i = 0; i < (int)str_addrs.size(); i++) {
-      google::protobuf::Map<string, string> r = db_addrs[i]->get_db();
-      results[str_addrs[i]];
+    for (auto endpoint : endpoints) {
+      google::protobuf::Map<string, string> r = endpoint.stub->get_db();
+      results[endpoint.address];
       for (std::string key : keys) {
-        results[str_addrs[i]].push_back(r[key]);
+        results[endpoint.address].push_back(r[key]);
       }
     }
 
@@ -292,21 +269,19 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
     }
   } else if (command == "test_count") {
     cout << yellow << "incoming request count " << reset << endl;
-
-    std::vector<rpc::call::ConsensusRPCWrapperCall*> addrs;
-    std::vector<std::string> str_addrs;
-    for (const auto& [key, node] : *(app::Cluster::memberList)) {
-      addrs.push_back(new rpc::call::ConsensusRPCWrapperCall(grpc::CreateChannel(node->databaseEndpoint.address, grpc::InsecureChannelCredentials())));
-      str_addrs.push_back(node->databaseEndpoint.address);
-    }
-
     std::map<std::string, std::vector<std::string>> results;
 
-    for (unsigned long i = 0; i < addrs.size(); i++) {
-      std::tuple<Status, std::map<std::string, int>, std::map<std::string, int>> res = addrs[i]->get_stats();
+    std::vector<app::Endpoint<rpc::call::ConsensusRPCWrapperCall>> endpoints;
+    for (const auto& [key, node] : *(app::Cluster::memberList))
+      endpoints.push_back(node->consensusEndpoint);
+
+    for (auto endpoint : endpoints) {
+      std::tuple<Status, std::map<std::string, int>, std::map<std::string, int>> res = endpoint.stub->get_stats();
       auto [status, incount, outcount] = res;
       if (!status.ok())
         cout << red << "RPC failure: get_stats failed" << reset << endl;
+
+      cout << yellow << "\nincoming requests count" << reset << endl;
 
       for (auto const& x : incount) {
         std::cout << x.first  // string (key)
@@ -315,7 +290,7 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
                   << std::endl;
       }
 
-      cout << yellow << "outgoing requests count" << reset << endl;
+      cout << yellow << "\noutgoing requests count" << reset << endl;
       for (auto const& x : outcount) {
         std::cout << x.first  // string (key)
                   << ':'
