@@ -198,7 +198,7 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
 
       char alpha[26] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 
-      for (int i = 0; i < 1000; i++) {
+      for (int i = 0; i < num_ops; i++) {
         string result = "";
         for (int i = 0; i < 5; i++) {
           result = result + alpha[rand() % 26];
@@ -212,10 +212,10 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       }
 
       std::map<std::string, std::vector<std::string>> results;
-      for (int i = 0; i < 5; i++) {
-        results[str_addrs[i]];
-        for (std::string key : keys) {
-          results[str_addrs[i]].push_back(db_addrs[i]->get(key));
+      for (unsigned long i = 0; i < db_addrs.size(); i++) {
+        google::protobuf::Map<string,string> res = db_addrs[i]->get_db();
+        for (auto & kb : res) {
+          results[str_addrs[i]].push_back(kb.second);
         }
       }
 
@@ -224,6 +224,67 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
         copy(value.begin(), value.end(), ostream_iterator<std::string>(std::cout, " "));
         std::cout << reset << endl;
       }
+    } else if (command == "test_5_random_ops") {
+      std::vector<rpc::call::DatabaseRPCWrapperCall*> db_addrs;
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9000", grpc::InsecureChannelCredentials())));
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9001", grpc::InsecureChannelCredentials())));
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9002", grpc::InsecureChannelCredentials())));
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9003", grpc::InsecureChannelCredentials())));
+      db_addrs.push_back(new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel("127.0.1.1:9004", grpc::InsecureChannelCredentials())));
+
+      std::vector<std::string> str_addrs;
+      str_addrs.push_back("127.0.1.1:9000");
+      str_addrs.push_back("127.0.1.1:9001");
+      str_addrs.push_back("127.0.1.1:9002");
+      str_addrs.push_back("127.0.1.1:9003");
+      str_addrs.push_back("127.0.1.1:9004");
+
+      std::vector<std::string> keys;
+      keys.push_back("a");
+      keys.push_back("b");
+      keys.push_back("c");
+      keys.push_back("d");
+      keys.push_back("e");
+      keys.push_back("f");
+      keys.push_back("g");
+      keys.push_back("h");
+      keys.push_back("i");
+      keys.push_back("j");
+
+      int num_ops = 1000;
+
+      srand(123);
+
+      char alpha[26] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+
+      for (int i = 0; i < num_ops; i++) {
+        string result = "";
+        for (int i = 0; i < 5; i++) {
+          result = result + alpha[rand() % 26];
+        }
+        int replica_idx = rand() % db_addrs.size();
+        int key_idx = rand() % keys.size();
+        Status s = db_addrs[replica_idx]->set(keys[key_idx], result);
+        if(!s.ok()){
+          std::cout << reset << red << "Set(" << keys[key_idx] << ", " << result << ") failed" << reset << endl; 
+        }
+      }
+
+      std::map<std::string, std::vector<std::string>> results;
+      for (int i = 0; i < 5; i++) {
+        google::protobuf::Map<string,string> r = db_addrs[i]->get_db();
+        results[str_addrs[i]];
+        for (std::string key : keys) {
+          results[str_addrs[i]].push_back(r[key]);
+        }
+      }
+
+      for (const auto& [key, value] : results) {
+        std::cout << cyan << key << ": " << reset;
+        copy(value.begin(), value.end(), ostream_iterator<std::string>(std::cout, " "));
+        std::cout << reset << endl;
+      }
+<<<<<<< HEAD
     } else if (command == "test_count") {
       cout << "inCount: " << endl;
 
@@ -241,6 +302,9 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
                   << x.second  // string's value
                   << std::endl;
       }
+=======
+
+>>>>>>> e3a41b1068a3f4c10c93ac4a77ecd68b8f988ff7
     }
   }
 

@@ -73,6 +73,7 @@ namespace rpc {
 
     grpc::Status get(grpc::ServerContext*, const database_interface::GetRequest*, database_interface::GetResponse*) override;
     grpc::Status set(grpc::ServerContext*, const database_interface::SetRequest*, database_interface::Empty*) override;
+    grpc::Status get_db(grpc::ServerContext*, const database_interface::Empty*, database_interface::FullDBResponse*) override;
     // This just returns the current log and db snapshot to the Consensus thread, to be forwarded to a recovering replica; This would only come from other servers
     // grpc::Status recovery(grpc::ServerContext*, const database_interface::RecoveryRequest*, database_interface::Recoveryresponse*) override;
   };
@@ -104,6 +105,7 @@ namespace rpc {
       /** database calls*/
       std::string get(const std::string&, bool = false);
       Status set(const std::string&, const std::string&, bool = false);
+      google::protobuf::Map<string, string> get_db();
 
       std::shared_ptr<database_interface::DatabaseService::Stub> stub;
     };

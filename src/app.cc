@@ -188,13 +188,13 @@ namespace app {
   }
 
   map<int, consensus_interface::LogEntry> Consensus::Get_Log(const string& key) {
-    pthread_mutex_lock(&log_mutex);
+    //pthread_mutex_lock(&log_mutex);
     return pax_log[key];
     //pthread_mutex_unlock(&log_mutex);
   }
 
   consensus_interface::LogEntry Consensus::Get_Log(const string& key, int round) {
-    pthread_mutex_lock(&log_mutex);
+    //pthread_mutex_lock(&log_mutex);
     return pax_log[key][round];
     //pthread_mutex_unlock(&log_mutex);
   }
