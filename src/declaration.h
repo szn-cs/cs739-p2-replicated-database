@@ -307,10 +307,10 @@ namespace app {
     static void increment(string s) {
       switch (t) {
         case rpc_type::incoming:
-          incount[s] = (incount[s] || 0) + 1;
+          incount[s] = (incount.find(s) == incount.end()) ? 1 : incount[s] + 1;
           break;
         case rpc_type::outgoing:
-          outcount[s] = (outcount[s] || 0) + 1;
+          outcount[s] = (outcount.find(s) == outcount.end()) ? 1 : outcount[s] + 1;
           break;
       }
     }
@@ -329,15 +329,15 @@ namespace app {
           break;
       }
 
-      std::cout << green << "registered rpc call counts " << reset;
+      std::cout << green << "registered rpc call counts: [" << reset;
       std::vector<string> key_l;
       std::vector<int> value_l;
       for (std::map<std::string, int>::iterator it = l.begin(); it != l.end(); ++it) {
         key_l.push_back(it->first);
         value_l.push_back(it->second);
-        std::cout << green << " " << it->first << reset;
+        std::cout << green << ", " << it->first << reset;
       }
-      std::cout << endl;
+      std::cout << "]" << endl;
     }
   };
 
