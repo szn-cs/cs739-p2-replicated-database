@@ -255,8 +255,6 @@ namespace app {
   }
 
   // std::string Consensus::SetLeader() {
-  //   // TODO: This is not a proper usage of locks
-  //   // Do we even need to lock a read like this???
 
   //   // Threadsafe read of leader address
   //   //pthread_mutex_lock(&Cluster::leader_mutex);
@@ -285,8 +283,20 @@ namespace app {
     // Set proposal id to 1, first proposal we are making from this replica
     int propose_id = 1;
 
-    // Ping servers, figure out who's alive
+    // Initialize variables to hold info about if there is already an accepted value
+    int num_accepted_proposals = 0;
+    int accepted_id = 0;
+    std::string accepted_value;
+    consensus_interface::Operation accepted_op = consensus_interface::Operation::NOT_SET;
+
     std::vector<std::shared_ptr<Node>> live_nodes;
+
+    // TODO: We may be able to implement the below logic to decrease latency
+    // Only need to do the ping and propose rounds if this is an election. Otherwise, because there is only one proposer,
+    // we can skip those steps and just send accept requests, and if there is a quorum, that will suffice
+
+    // Ping servers, figure out who's alive
+    
     for (const auto& [key, node] : *(Cluster::memberList)) {
       Status res = node->consensusEndpoint.stub->ping();
       if (res.ok()) {
@@ -313,10 +323,6 @@ namespace app {
     prepare_request.set_pserver_id(propose_id);
 
     // Sending the request to all nodes, tracking if a value has already been accepted for our key
-    int num_accepted_proposals = 0;
-    int accepted_id = 0;
-    std::string accepted_value;
-    consensus_interface::Operation accepted_op = consensus_interface::Operation::NOT_SET;
 
     for (const auto& node : live_nodes) {
       std::pair<Status, Response> response = node->consensusEndpoint.stub->propose(prepare_request);
@@ -342,6 +348,7 @@ namespace app {
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Propose state: Not enough live servers for quorum." << reset << std::endl;
       return default_response;
     }
+  
 
     // 2. Entering the accept stage
 
@@ -379,7 +386,7 @@ namespace app {
     if (Cluster::config->flag.debug) {
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow
                 << "Acceptance phase done. " << num_final_acceptances << " accept, "
-                << num_live_acceptors - num_final_acceptances << " reject." << reset << std::endl;
+                << live_nodes.size() - num_final_acceptances << " reject." << reset << std::endl;
     }
 
     // Check that we still have quorum
@@ -429,7 +436,6 @@ namespace app {
   /**
    * Internal database KV methods
    * - not accessible by users only quorum participants/nodes.
-   * TODO: Is this locking scheme good enough?
    */
   std::pair<std::string, int> Database::Get_KV(const string& key) {
     // Returning a pair to indicate if the element does not exist vs if its simply an empty string in the db
