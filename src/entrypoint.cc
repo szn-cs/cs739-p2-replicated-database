@@ -291,6 +291,34 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
     table_incount.print(std::cout);
     cout << yellow << "\noutgoing requests count" << reset << endl;
     table_outcount.print(std::cout);
+
+  } else if(command == "test_recovery"){
+
+    string db_address = "127.0.1.1:9000";
+    rpc::call::DatabaseRPCWrapperCall* leader_conn = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(db_address, grpc::InsecureChannelCredentials()));
+
+    Status s = leader_conn->set("0", "v1");
+    s = leader_conn->set("1", "v2");
+    s = leader_conn->set("2", "v3");
+
+    string expected[3] = {"v1", "v2", "v3"};
+
+    std::cout << cyan << "Start up a node with consensus address 127.0.1.1:8001 and db address 127.0.1.1::9001. We will sleep for 10 seconds to allow time for this and recovery to occur"<< reset << endl;
+    
+    
+
+    // Ensure new node had a chance to start up properly
+    sleep(10);
+
+    string replica_addr = "127.0.1.1:9001";
+    rpc::call::DatabaseRPCWrapperCall* replica_conn = new rpc::call::DatabaseRPCWrapperCall(grpc::CreateChannel(replica_addr, grpc::InsecureChannelCredentials()));
+
+    google::protobuf::Map<string,string> replica_db = replica_conn->get_db();
+    for(int i = 0; i < 3; i++){
+      std::cout << cyan << "Key: " << i << " | Expected: " << expected[i] << " | Result: " << replica_db[std::to_string(i)] << reset << endl;
+    }
+
+
   }
 
   return 0;

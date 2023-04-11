@@ -129,11 +129,36 @@ namespace app {
         status = Status(grpc::StatusCode::ABORTED, "we could not establish a leader, not enough nodes.");
     }
 
-    if (!status.ok())
+    if (!status.ok()){
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
                 << "Unable to initialize node because " << status.error_message() << reset << std::endl;
+      return;
+    }
 
-    // TODO: Recovery goes here
+    // Recover the db from the leader, unless we are leader
+    if(Cluster::leader.empty()){
+      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
+                << "Somehow no leader is set." << reset << std::endl;
+      return;
+    }
+
+    if (Cluster::leader != Cluster::config->getAddress<app::Service::Consensus>().toString()) {
+      google::protobuf::Map<string,string> leader_db = Cluster::memberList->at(Cluster::leader)->databaseEndpoint.stub->get_db();
+      if(leader_db.empty()){
+        std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
+                << "Recovery map sent by leader is empty. Please determine if this is the expected behavior." << reset << std::endl;
+      }
+      for (const auto& [key, value] : leader_db) {
+        app::Database::instance->Set_KV(key, value);
+      }
+
+      if(Cluster::config->flag.debug){
+        std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow
+                << "Recovery succeeded." << reset << std::endl;
+      }
+
+    }
+    
 
     return;
   }
@@ -261,7 +286,6 @@ namespace app {
     int propose_id = 1;
 
     // Ping servers, figure out who's alive
-    // TODO: Is this necessary? This was done in the git repo one to allow for variable quorum sizes
     std::vector<std::shared_ptr<Node>> live_nodes;
     for (const auto& [key, node] : *(Cluster::memberList)) {
       Status res = node->consensusEndpoint.stub->ping();
@@ -294,7 +318,7 @@ namespace app {
     std::string accepted_value;
     consensus_interface::Operation accepted_op = consensus_interface::Operation::NOT_SET;
 
-    for (const auto& [key, node] : *(Cluster::memberList)) {
+    for (const auto& node : live_nodes) {
       std::pair<Status, Response> response = node->consensusEndpoint.stub->propose(prepare_request);
       if (response.first.ok()) {
         num_accepted_proposals++;
@@ -339,7 +363,7 @@ namespace app {
 
     // For each node, send an accept request
     Response acceptance;
-    for (const auto& [key, node] : *(Cluster::memberList)) {
+    for (const auto& node : live_nodes) {
       std::pair<Status, Response> response = node->consensusEndpoint.stub->accept(accept_request);
       if (response.first.ok()) {
         num_final_acceptances++;
