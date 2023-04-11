@@ -1,6 +1,10 @@
 # Distributed Replicated Database [cs739-p2-replicated-database]
 - [Paxos implementation](./documentation/paxos-consensus.md)
 
+# Architecture Design
+
+![architecture](./documentation/Design%20Architecture.v3.jpg)
+
 # Setup: 
 
 - execute `./script/provision-local.sh` to setup repo and install dependencies
