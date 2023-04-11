@@ -1,16 +1,36 @@
 # Distributed Replicated Database [cs739-p2-replicated-database]
-- [Paxos implementation](./documentation/paxos-consensus.md)
+- An implementation of a replicated in-memory KV-store using Multi-Paxos consensus algorithm. 
+- [Paxos algorithm description](./documentation/paxos-consensus.md)
 
 # Architecture Design
 
+The logic of the code is divided into database & consensus portions. Each encompasses the algorithm implementations of the KV-Store and the consensus funcitons, respectively. In addition to the RPC functionality of the database endpoint exposed to the user and the consensus endpoint used to communicate amongst nodes.
+
 ![architecture](./documentation/Design%20Architecture.v3.jpg)
 
-# Setup: 
+## Code details:
+static member datastructures are instrantiated once and used to manage the node's state (similar to how  singleton pattern works).  
+- **Consensus class**: holds the consensus functionality and handles the command logs datastructure. 
+- **Database class**: implements an in-memory key-value store. 
+- **ConsensusRPC**: for the consensus endpoint, defines the typical RPC implementations for Paxos, such as propose, accept, and success. In addition to RPC functions used for testing purposes.
+- **DatabaseRPC**: defines the user-exposed endpoint for interactive with the replicated database service. Accepts requests such as get & set (alternatively used for delete operation).
+- **RPCWrapperCall functions**: these intend to abstract the calls to the gRPC (which include setting up protobuf structures) and provide a clean programming interface without dealing with the generated stubs directly.
+
+_Note: as the deadline for the assignment approached, the modularity boundaries were violated, thus the code requires a round of refactoring to adhere to the original intention of the above modules._
+
+# Build process & Setup instrucitons: 
+For simplicity, the project generates a single binary file which can run serving the role of a cluster **node** or it can be run in **user** mode for testing the distributed service. All required repository setup scripts are included under `./script/*.sh`. 
+
+- _Tools used in the project:_ `CMake` build tool, `VCpkg` package manger for C++, Git submodules to install alternative dependencies.
+- gRPC library & it's dependencies are installed locally using the package manager. (initial installation may take 15 mins). 
+
+## How to use: 
 
 - execute `./script/provision-local.sh` to setup repo and install dependencies
 - run script `build.sh` → binary files in `./target`
 - check `run.sh` for running the program
-  - to run funcitons in script files (without copy pasting): `$ (source ./script/<scriptname>.sh && <functioname>)`
+
+_to run funcitons in script files (without copy pasting): `$ (source ./script/<scriptname>.sh && <functioname>)`_
 
 # Resources & Research papers: 
 - EPaxos 
