@@ -325,26 +325,31 @@ namespace rpc {
 
       Status leader_status = app::Cluster::memberList->at(app::Cluster::leader)->databaseEndpoint.stub->stub->get(&leader_context, leader_request, &leader_response);
 
-      if (leader_status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED ||
-          leader_status.error_code() == grpc::StatusCode::CANCELLED) {
-        // TODO: We must elect a new leader
+      if (!leader_status.ok()) {
+        // We must elect a new leader
+        if (app::Cluster::config->flag.debug) {
+          std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << cyan << "Leader unresponsive, finding new leader." << reset << std::endl;
+        }
 
-        // Status election_status = rpc::call::ConsensusRPCWrapperCall::trigger_election();
-        // if(!election_status.ok()){
-        //   return Status(grpc::StatusCode::ABORTED, "Could not find a suitable leader.");
-        // }
-        // grpc::ClientContext new_leader_context;
-        // auto deadline =
-        //   std::chrono::system_clock::now() + std::chrono::milliseconds(5000);
-        // new_leader_context.set_deadline(deadline);
+        Status election_status = app::Cluster::currentNode->consensusEndpoint.stub->trigger_election();
+        if(!election_status.ok()){
+          if (app::Cluster::config->flag.debug) {
+            std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << cyan << "Election failed, likely due to too many nodes being down." << reset << std::endl;
+          }
+          return Status(grpc::StatusCode::ABORTED, "Could not find a suitable leader.");
+        }
+        grpc::ClientContext new_leader_context;
+        auto deadline =
+          std::chrono::system_clock::now() + std::chrono::milliseconds(5000);
+        new_leader_context.set_deadline(deadline);
 
-        // Status new_leader_status = app::Cluster::memberList->at(app::Cluster::leader)->databaseEndpoint.stub->stub->get(&leader_context, new_leader_context, &leader_response);
+        Status new_leader_status = app::Cluster::memberList->at(app::Cluster::leader)->databaseEndpoint.stub->stub->get(&new_leader_context, leader_request, &leader_response);
 
-        // if(!new_leader_status.ok()){
-        //   return Status(grpc::StatusCode::ABORTED, "New leader was not able to get value.");
-        // }
-        // response->set_value(leader_response.value());
-        // response->set_error(leader_response.error());
+        if(!new_leader_status.ok()){
+          return Status(grpc::StatusCode::ABORTED, "New leader was not able to get value.");
+        }
+        response->set_value(leader_response.value());
+        response->set_error(leader_response.error());
 
       } else {
         if (app::Cluster::config->flag.debug) {
@@ -391,7 +396,7 @@ namespace rpc {
         if (app::Cluster::config->flag.debug) {
           std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << cyan << "Reached consensus: Key: " << request->key() << " Value: " << resp.second.value() << reset << std::endl;
         }
-        //app::Database::instance->Set_KV(request->key(), resp.second.value());
+        // KV value is stored as a part of the inform() rpc
       }
       return resp.first;
     } else {
@@ -413,9 +418,28 @@ namespace rpc {
 
       Status leader_status = app::Cluster::memberList->at(app::Cluster::leader)->databaseEndpoint.stub->stub->set(&leader_context, leader_request, &leader_response);
 
-      if (leader_status.error_code() == grpc::StatusCode::DEADLINE_EXCEEDED ||
-          leader_status.error_code() == grpc::StatusCode::CANCELLED) {
-        // TODO: We must elect a new leader
+      if (!leader_status.ok()) {
+        if (app::Cluster::config->flag.debug) {
+          std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << cyan << "Leader unresponsive, finding new leader." << reset << std::endl;
+        }
+
+        Status election_status = app::Cluster::currentNode->consensusEndpoint.stub->trigger_election();
+        if(!election_status.ok()){
+          if (app::Cluster::config->flag.debug) {
+            std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << cyan << "Election failed, likely due to too many nodes being down." << reset << std::endl;
+          }
+          return Status(grpc::StatusCode::ABORTED, "Could not find a suitable leader.");
+        }
+        grpc::ClientContext new_leader_context;
+        auto deadline =
+          std::chrono::system_clock::now() + std::chrono::milliseconds(5000);
+        new_leader_context.set_deadline(deadline);
+
+        Status new_leader_status = app::Cluster::memberList->at(app::Cluster::leader)->databaseEndpoint.stub->stub->set(&new_leader_context, leader_request, &leader_response);
+
+        if(!new_leader_status.ok()){
+          return Status(grpc::StatusCode::ABORTED, "New leader was not able to get value.");
+        }
       }
     }
 

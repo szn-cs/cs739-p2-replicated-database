@@ -319,7 +319,7 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
     }
 
 
-  }
+  } 
 
   return 0;
 }
