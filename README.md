@@ -13,7 +13,7 @@ static member datastructures are instrantiated once and used to manage the node'
 - **Consensus class**: holds the consensus functionality and handles the command logs datastructure. 
 - **Database class**: implements an in-memory key-value store. 
 - **ConsensusRPC**: for the consensus endpoint, defines the typical RPC implementations for Paxos, such as propose, accept, and success. In addition to RPC functions used for testing purposes.
-- **DatabaseRPC**: defines the user-exposed endpoint for interactive with the replicated database service. Accepts requests such as get & set (alternatively used for delete operation).
+- **DatabaseRPC**: defines the user-exposed endpoint for interactive with the replicated database service. Accepts requests such as get & set (alternatively used for delete operation). In addition to debugging RPC function, such as `get_db` to retrieve a database snapshot.
 - **RPCWrapperCall functions**: these intend to abstract the calls to the gRPC (which include setting up protobuf structures) and provide a clean programming interface without dealing with the generated stubs directly.
 
 _Note: as the deadline for the assignment approached, the modularity boundaries were violated, thus the code requires a round of refactoring to adhere to the original intention of the above modules._
