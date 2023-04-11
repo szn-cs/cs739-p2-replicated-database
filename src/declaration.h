@@ -11,12 +11,12 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <time.h>
 
 #include <algorithm>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/asio.hpp>
+#include <boost/current_function.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/foreach.hpp>
@@ -24,6 +24,7 @@
 #include <boost/program_options.hpp>
 #include <chrono>
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -39,6 +40,7 @@
 #include <thread>
 #include <vector>
 
+#include "../dependency/variadic_table/include/VariadicTable.h"  // https://github.com/friedmud/variadic_table
 #include "consensus_interface.grpc.pb.h"
 #include "database_interface.grpc.pb.h"
 
@@ -47,7 +49,7 @@ using namespace consensus_interface;
 using namespace database_interface;
 using namespace grpc;
 using grpc::Server, grpc::ServerBuilder, grpc::ServerContext, grpc::ServerReader, grpc::ServerWriter, grpc::Status;  // https://grpc.github.io/grpc/core/md_doc_statuscodes.html
-using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan, termcolor::grey;
+using termcolor::reset, termcolor::yellow, termcolor::red, termcolor::blue, termcolor::cyan, termcolor::grey, termcolor::magenta, termcolor::green;
 namespace fs = std::filesystem;
 
 namespace utility {
@@ -65,8 +67,8 @@ namespace utility {
 
 namespace rpc {
   /**
-   * Database RPC endpoint (which the server exports on a particular port)
-  */
+ * Database RPC endpoint (which the server exports on a particular port)
+ */
   class DatabaseRPC : public database_interface::DatabaseService::Service {
    public:
     //  explicit DatabaseRPC() { pthread_mutex_init(&lock, NULL); }
@@ -291,6 +293,54 @@ namespace utility::server {
 
 namespace app {
 
+  struct Statistics {
+    enum rpc_type {
+      incoming,
+      outgoing
+    };
+    // count RPCs
+    static std::map<std::string, int> incount;
+    static std::map<std::string, int> outcount;
+
+    // increment the corresponding element and initialize if necessary
+    template <rpc_type t>
+    static void increment(string s) {
+      switch (t) {
+        case rpc_type::incoming:
+          incount[s] = (incount[s] || 0) + 1;
+          break;
+        case rpc_type::outgoing:
+          outcount[s] = (outcount[s] || 0) + 1;
+          break;
+      }
+    }
+
+    // print results
+    template <rpc_type t>
+    static void print() {
+      std::map<std::string, int> l;
+
+      switch (t) {
+        case rpc_type::incoming:
+          l = incount;
+          break;
+        case rpc_type::outgoing:
+          l = outcount;
+          break;
+      }
+
+      std::cout << green << "registered rpc call counts " << reset;
+      std::vector<string> key_l;
+      std::vector<int> value_l;
+      for (std::map<std::string, int>::iterator it = l.begin(); it != l.end(); ++it) {
+        key_l.push_back(it->first);
+        value_l.push_back(it->second);
+        std::cout << green << " " << it->first << reset;
+      }
+      std::cout << endl;
+    }
+  };
+
   template <typename C>
   struct Endpoint {
     Endpoint() = default;
@@ -321,10 +371,6 @@ namespace app {
 
     static std::string leader;
     static pthread_mutex_t leader_mutex;
-
-    // count RPCs
-    static std::map<std::string, int> incount;
-    static std::map<std::string, int> outcount;
   };
 
   void initializeStaticInstance(std::vector<std::string> addressList, std::shared_ptr<utility::parse::Config> config);

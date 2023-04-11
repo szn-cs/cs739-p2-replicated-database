@@ -268,36 +268,29 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
       std::cout << reset << endl;
     }
   } else if (command == "test_count") {
-    cout << yellow << "incoming request count " << reset << endl;
     std::map<std::string, std::vector<std::string>> results;
 
     std::vector<app::Endpoint<rpc::call::ConsensusRPCWrapperCall>> endpoints;
     for (const auto& [key, node] : *(app::Cluster::memberList))
       endpoints.push_back(node->consensusEndpoint);
 
+    VariadicTable<std::string, int, int, int, int, int, int, int, int, int, int> table_incount({"address", "propose", "accept", "success", "ping", "get_leader", "elect_leader", "get", "set", "get_stats", "get_db"}, 2);
+    VariadicTable<std::string, int, int, int, int, int, int, int, int> table_outcount({"address", "propose", "accept", "success", "ping", "get_leader", "trigger_election", "get", "set"}, 2);
+
     for (auto endpoint : endpoints) {
       std::tuple<Status, std::map<std::string, int>, std::map<std::string, int>> res = endpoint.stub->get_stats();
       auto [status, incount, outcount] = res;
       if (!status.ok())
-        cout << red << "RPC failure: get_stats failed" << reset << endl;
+        throw std::runtime_error("RPC failure: get_stats failed");
 
-      cout << yellow << "\nincoming requests count" << reset << endl;
-
-      for (auto const& x : incount) {
-        std::cout << x.first  // string (key)
-                  << ':'
-                  << x.second  // string's value
-                  << std::endl;
-      }
-
-      cout << yellow << "\noutgoing requests count" << reset << endl;
-      for (auto const& x : outcount) {
-        std::cout << x.first  // string (key)
-                  << ':'
-                  << x.second  // string's value
-                  << std::endl;
-      }
+      table_incount.addRow(endpoint.address, incount["ConsensusRPC::propose"], incount["ConsensusRPC::accept"], incount["ConsensusRPC::success"], incount["ConsensusRPC::ping"], incount["ConsensusRPC::get_leader"], incount["ConsensusRPC::elect_leader"], incount["DatabaseRPC::get"], incount["DatabaseRPC::set"], incount["ConsensusRPC::get_stats"], incount["DatabaseRPC::get_db"]);
+      table_outcount.addRow(endpoint.address, outcount["ConsensusRPCWrapperCall::propose"], outcount["ConsensusRPCWrapperCall::accept"], outcount["ConsensusRPCWrapperCall::success"], outcount["ConsensusRPCWrapperCall::ping"], outcount["ConsensusRPCWrapperCall::get_leader"], outcount["ConsensusRPCWrapperCall::trigger_election"], outcount["DatabaseRPCWrapperCall::get"], outcount["DatabaseRPCWrapperCall::set"]);
     }
+
+    cout << yellow << "\nincoming requests count" << reset << endl;
+    table_incount.print(std::cout);
+    cout << yellow << "\noutgoing requests count" << reset << endl;
+    table_outcount.print(std::cout);
   }
 
   return 0;

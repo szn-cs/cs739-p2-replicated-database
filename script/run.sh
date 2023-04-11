@@ -64,8 +64,8 @@ test_leader_functionality() {
 }
 
 test_consistency_no_failure() {
-  CONFIG=10_node_cluster.ini
-  NUMBER=10
+  CONFIG=3_node_cluster.ini
+  NUMBER=3
 
   for i in {0..$((${NUMBER} - 1))}; do
     ones=$(($i % 10))
@@ -73,7 +73,8 @@ test_consistency_no_failure() {
     port_suffix="${tens}${ones}"
 
     if [[ $port_suffix == "00" ]]; then
-      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader &
+      # ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader &
+      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} &
     else
       ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} &
     fi
@@ -84,9 +85,11 @@ test_consistency_no_failure() {
   ./target/app -g -m user --command test_1000_random_ops --config ${CONFIG}
   ./target/app -g -m user --command test_count --config ${CONFIG}
 
-  #### separate stage
+}
 
+#  (source ./script/run.sh && terminate_process)
+terminate_process() {
   # cleanup
+  (kill $(ps aux | grep '[./]target/app' | awk '{print $2}') >/dev/null 2>&1)
   kill $(jobs -p) >/dev/null 2>&1
-  kill $(ps aux | grep '[./]target/app' | awk '{print $2}') >/dev/null 2>&1
 }

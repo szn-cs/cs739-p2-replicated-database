@@ -10,22 +10,10 @@ namespace app {
   std::shared_ptr<Node> Cluster::currentNode = nullptr;
   std::string Cluster::leader;
   pthread_mutex_t Cluster::leader_mutex;
-  std::map<string, int> Cluster::incount;
-  std::map<string, int> Cluster::outcount;
+  std::map<string, int> Statistics::incount;
+  std::map<string, int> Statistics::outcount;
 
   void initializeStaticInstance(std::vector<std::string> addressList, std::shared_ptr<utility::parse::Config> config) {
-    Cluster::incount["propose"] = 0;
-    Cluster::incount["accept"] = 0;
-    Cluster::incount["get"] = 0;
-    Cluster::incount["set"] = 0;
-    Cluster::incount["success"] = 0;
-
-    Cluster::outcount["propose"] = 0;
-    Cluster::outcount["accept"] = 0;
-    Cluster::outcount["get"] = 0;
-    Cluster::outcount["set"] = 0;
-    Cluster::outcount["success"] = 0;
-
     Cluster::config = config;
 
     Cluster::memberList = std::make_shared<std::map<std::string, std::shared_ptr<Node>>>();
@@ -233,8 +221,6 @@ namespace app {
   }
 
   std::string Consensus::GetLeader() {
-    std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow << "Consensus::GetLeader()" << reset << std::endl;
-
     //pthread_mutex_lock(&Cluster::leader_mutex);
     //std::string leader = Cluster::leader;
     //pthread_mutex_unlock(&Cluster::leader_mutex);
