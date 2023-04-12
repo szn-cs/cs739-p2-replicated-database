@@ -36,12 +36,10 @@ target_link_libraries(${SERVER_BINARY_NAME}
 
 target_include_directories(${SERVER_BINARY_NAME} PRIVATE ${TERMCOLOR_INCLUDE_DIRS})
 
-target_compile_options(${SERVER_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -g -O0 -Wextra -Wzero-as-null-pointer-constant -Wextra -Wno-unused -Wno-unused-parameter)
-target_compile_options(${SERVER_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -D_FILE_OFFSET_BITS=64>)
+target_compile_options(${SERVER_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -Wall -O0 -D_FILE_OFFSET_BITS=64 -Wextra -Wzero-as-null-pointer-constant -Wextra -Wno-unused -Wno-unused-parameter>)
 
 # optimized: 
-# target_compile_options(${SERVER_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -g -O3)
-# target_compile_options(${SERVER_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -O3 -D_FILE_OFFSET_BITS=64>)
+# target_compile_options(${SERVER_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -Wall -g -O3 -D_FILE_OFFSET_BITS=64 -Wextra -Wzero-as-null-pointer-constant -Wextra -Wno-unused -Wno-unused-parameter>)
 
 check_function_exists(fallocate HAVE_FALLOCATE)
 check_function_exists(fallocate HAVE_FLOCK)

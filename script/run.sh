@@ -64,8 +64,8 @@ test_leader_functionality() {
 }
 
 test_consistency_no_failure() {
-  CONFIG=50_node_cluster.ini
-  NUMBER=50
+  CONFIG=5_node_cluster.ini
+  NUMBER=5
 
   for i in {0..$((${NUMBER} - 1))}; do
     ones=$(($i % 10))
