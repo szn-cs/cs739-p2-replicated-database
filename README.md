@@ -1,6 +1,5 @@
 # Distributed Replicated Database [cs739-p2-replicated-database]
 - An implementation of a replicated in-memory KV-store using Multi-Paxos consensus algorithm. 
-- [Paxos algorithm description](./documentation/paxos-consensus.md)
 
 # Architecture Design
 
@@ -23,6 +22,7 @@ For simplicity, the project generates a single binary file which can run serving
 
 - _Tools used in the project:_ `CMake` build tool, `VCpkg` package manger for C++, Git submodules to install alternative dependencies.
 - gRPC library & it's dependencies are installed locally using the package manager. (initial installation may take 15 mins). 
+- External libraries used include: `variadic table` (submodule), `Boost` library (such as programs_options component), `Termcolor`, `Google/Benchmark`, etc.
 
 ## How to use: 
 
@@ -32,7 +32,12 @@ For simplicity, the project generates a single binary file which can run serving
 
 _to run funcitons in script files (without copy pasting): `$ (source ./script/<scriptname>.sh && <functioname>)`_
 
-# Resources & Research papers: 
+
+# Algorithm Details: 
+
+- [Our Paxos algorithm approach](./documentation/paxos-consensus.md)
+
+## Resources & Research papers: 
 - EPaxos 
   - <https://lamport.azurewebsites.net/pubs/paxos-simple.pdf>
   - <https://www.usenix.org/system/files/nsdi21-tollman.pdf>
