@@ -17,6 +17,10 @@ build() {
   (source ./script/build.sh && test)
 }
 
+build_optimized() {
+  echo "requires commenting out the appropriate lines in 'CMakeLists_app.cmake'"
+}
+
 # TODO: move to CMAKE
 test() {
   gcc -Wall ./test/test.c -o ./target/test

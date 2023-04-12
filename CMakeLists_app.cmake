@@ -35,7 +35,7 @@ target_compile_options(${SERVER_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall
 target_compile_options(${SERVER_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -D_FILE_OFFSET_BITS=64>)
 
 # optimized: 
-# target_compile_options(${SERVER_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -O3 -Wall -Wextra -Wno-unused -Wno-unused-parameter)
+# target_compile_options(${SERVER_BINARY_NAME} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -g -O3)
 # target_compile_options(${SERVER_BINARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -O3 -D_FILE_OFFSET_BITS=64>)
 
 check_function_exists(fallocate HAVE_FALLOCATE)
