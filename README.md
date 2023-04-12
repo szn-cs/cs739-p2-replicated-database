@@ -1,4 +1,5 @@
-# Distributed Replicated Database [cs739-p2-replicated-database]
+# Distributed Replicated Database using Paxos [cs739-p2-replicated-database]
+
 - An implementation of a replicated in-memory KV-store using Multi-Paxos consensus algorithm. 
 
 # Architecture Design
