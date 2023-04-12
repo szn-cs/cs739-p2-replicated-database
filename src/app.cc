@@ -74,6 +74,8 @@ namespace app {
 
   void Consensus::coordinate() {
     Status status = Status::OK;
+    std::set<std::string> leaders;
+    std::set<std::string> live_replicas;
 
     if (Cluster::config->flag.leader) {
       // Can use self to indicate if this replica is a leader, an address otherwise
@@ -81,84 +83,78 @@ namespace app {
 
       if (Cluster::config->flag.debug)
         std::cout << termcolor::blue << "I am the leader, address " << Cluster::config->getAddress<app::Service::Consensus>().toString() << reset << endl;
+    } else {
+      std::mt19937_64 eng{std::random_device{}()};    //  seed randomly
+      std::uniform_int_distribution<> dist{1, 5000};  // 1 ms to 5 seconds
+      std::this_thread::sleep_for(std::chrono::milliseconds{dist(eng)});
 
-      return;
-    }
-
-    std::mt19937_64 eng{std::random_device{}()};    //  seed randomly
-    std::uniform_int_distribution<> dist{1, 5000};  // 1 ms to 5 seconds
-    std::this_thread::sleep_for(std::chrono::milliseconds{dist(eng)});
-
-    // Must send get_coordinator requests to other stubs
-    // Because this is a call not going explicitly to leader, need to track which
-    // nodes are live
-    if (Cluster::config->flag.debug)
-      std::cout << termcolor::blue << "I am not the leader" << reset << endl;
-
-    std::set<std::string> leaders;
-    std::set<std::string> live_replicas;
-    for (const auto& [key, node] : *(Cluster::memberList)) {
-      if (Cluster::config->flag.debug) {
-        std::cout << termcolor::blue << "get_leader() request to " << key << reset << endl;
-      }
-      std::pair<Status, std::string> res = node->consensusEndpoint.stub->get_leader();
-      if (res.first.ok()) {  // Replica is up
-        live_replicas.insert(key);
-        if (!res.second.empty())  // Replica knows the current leader
-          leaders.insert(res.second);
-      }
-    }
-
-    // leaders.size() will be 1 or 0, unless consensus issues
-    // If 0, trigger an election
-    // Check if leader is alive, if not return a non ok status to trigger an election
-    if (leaders.size() == 1 && live_replicas.find(*leaders.begin()) != live_replicas.end()) {
+      // Must send get_coordinator requests to other stubs
+      // Because this is a call not going explicitly to leader, need to track which
+      // nodes are live
       if (Cluster::config->flag.debug)
-        std::cout << termcolor::blue << "Valid leader returned." << reset << endl;
+        std::cout << termcolor::blue << "I am not the leader" << reset << endl;
 
-      pthread_mutex_lock(&(Cluster::leader_mutex));
-      Cluster::leader = *leaders.begin();
-      pthread_mutex_unlock(&(Cluster::leader_mutex));
-    } else if (Cluster::config->flag.election) {
-      // Send an election request to ourself
-      if (Cluster::config->flag.debug)
-        std::cout << termcolor::blue << "No valid leader returned by any server, starting election. " << leaders.size() << " leaders were suggested." << reset << endl;
+      for (const auto& [key, node] : *(Cluster::memberList)) {
+        if (Cluster::config->flag.debug) {
+          std::cout << termcolor::blue << "get_leader() request to " << key << reset << endl;
+        }
+        std::pair<Status, std::string> res = node->consensusEndpoint.stub->get_leader();
+        if (res.first.ok()) {  // Replica is up
+          live_replicas.insert(key);
+          if (!res.second.empty())  // Replica knows the current leader
+            leaders.insert(res.second);
+        }
+      }
 
-      Status election_status = Cluster::currentNode->consensusEndpoint.stub->trigger_election();
-      if (!election_status.ok())
-        status = Status(grpc::StatusCode::ABORTED, "we could not establish a leader, not enough nodes.");
-    }
+      // leaders.size() will be 1 or 0, unless consensus issues
+      // If 0, trigger an election
+      // Check if leader is alive, if not return a non ok status to trigger an election
+      if (leaders.size() == 1 && live_replicas.find(*leaders.begin()) != live_replicas.end()) {
+        if (Cluster::config->flag.debug)
+          std::cout << termcolor::blue << "Valid leader returned." << reset << endl;
 
-    if (!status.ok()){
-      std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
-                << "Unable to initialize node because " << status.error_message() << reset << std::endl;
-      return;
+        pthread_mutex_lock(&(Cluster::leader_mutex));
+        Cluster::leader = *leaders.begin();
+        pthread_mutex_unlock(&(Cluster::leader_mutex));
+      } else if (Cluster::config->flag.election) {
+        // Send an election request to ourself
+        if (Cluster::config->flag.debug)
+          std::cout << termcolor::blue << "No valid leader returned by any server, starting election. " << leaders.size() << " leaders were suggested." << reset << endl;
+
+        Status election_status = Cluster::currentNode->consensusEndpoint.stub->trigger_election();
+        if (!election_status.ok())
+          status = Status(grpc::StatusCode::ABORTED, "we could not establish a leader, not enough nodes.");
+      }
+
+      if (!status.ok()) {
+        std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
+                  << "Unable to initialize node because " << status.error_message() << reset << std::endl;
+        return;
+      }
     }
 
     // Recover the db from the leader, unless we are leader
-    if(Cluster::leader.empty()){
+    if (Cluster::leader.empty()) {
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
                 << "Somehow no leader is set." << reset << std::endl;
       return;
     }
 
     if (Cluster::leader != Cluster::config->getAddress<app::Service::Consensus>().toString()) {
-      google::protobuf::Map<string,string> leader_db = Cluster::memberList->at(Cluster::leader)->databaseEndpoint.stub->get_db();
-      if(leader_db.empty()){
+      google::protobuf::Map<string, string> leader_db = Cluster::memberList->at(Cluster::leader)->databaseEndpoint.stub->get_db();
+      if (leader_db.empty()) {
         std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red
-                << "Recovery map sent by leader is empty. Please determine if this is the expected behavior." << reset << std::endl;
+                  << "Recovery map sent by leader is empty. Please determine if this is the expected behavior." << reset << std::endl;
       }
       for (const auto& [key, value] : leader_db) {
         app::Database::instance->Set_KV(key, value);
       }
 
-      if(Cluster::config->flag.debug){
+      if (Cluster::config->flag.debug) {
         std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << yellow
-                << "Recovery succeeded." << reset << std::endl;
+                  << "Recovery succeeded." << reset << std::endl;
       }
-
     }
-    
 
     return;
   }
@@ -296,7 +292,7 @@ namespace app {
     // we can skip those steps and just send accept requests, and if there is a quorum, that will suffice
 
     // Ping servers, figure out who's alive
-    
+
     for (const auto& [key, node] : *(Cluster::memberList)) {
       Status res = node->consensusEndpoint.stub->ping();
       if (res.ok()) {
@@ -348,7 +344,6 @@ namespace app {
       std::cout << termcolor::grey << utility::getClockTime() << termcolor::reset << red << "Propose state: Not enough live servers for quorum." << reset << std::endl;
       return default_response;
     }
-  
 
     // 2. Entering the accept stage
 

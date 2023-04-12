@@ -5,33 +5,36 @@
 
 #include "../src/declaration.h"
 
-void SomeFunction(size_t size) {
-  cout << termcolor::grey << utility::getClockTime() << termcolor::reset << endl;
+// This test is not fully automated and required manual setup of cluster beforehand.
+void reachConsensus(rpc::call::DatabaseRPCWrapperCall& c, const size_t size) {
+  grpc::Status res;
+  benchmark::DoNotOptimize(res = c.set("k", "v"));
+  benchmark::ClobberMemory();
 
-  string address = "127.0.1.1:8000";
-
-  rpc::call::ConsensusRPCWrapperCall c{grpc::CreateChannel(address, grpc::InsecureChannelCredentials())};
-
-  std::pair<Status, std::string> res = c.get_leader();
-  if (!res.first.ok())
+  if (!res.ok())
     throw std::runtime_error("RPC FAILURE");
-
-  std::string s1(size, '-');
-  std::string s2(size, '-');
-  benchmark::DoNotOptimize(s1.compare(s2));
 }
 
-static void BM_SomeFunction(benchmark::State& state) {
+static void benchmark_function(benchmark::State& state) {
+  state.PauseTiming();
+  cout << termcolor::grey << utility::getClockTime() << termcolor::reset << endl;
+  string address = "127.0.1.1:9005";  // can be leader / follower depending on initial setup (not automated)
+  rpc::call::DatabaseRPCWrapperCall c{grpc::CreateChannel(address, grpc::InsecureChannelCredentials())};
+
+  state.ResumeTiming();
+
   // Perform setup here
   for (auto _ : state) {
     // This code gets timed
-    SomeFunction(state.range(0));
+    reachConsensus(c, 1);
   }
 }
-// Register the function as a benchmark
-BENCHMARK(BM_SomeFunction)->Arg(1);  // ->Arg(200000)->Arg(400000);
 
-// BENCHMARK(BM_SomeFunction)->RangeMultiplier(2)->Range(1 << 10, 1 << 20);
+// Register the function as a benchmark
+// BENCHMARK(benchmark_function)->Arg(1);  // ->Arg(200000)->Arg(400000);
+BENCHMARK(benchmark_function)->Iterations(pow(10, 4));  // ->Arg(200000)->Arg(400000)
+
+// BENCHMARK(benchmark_function)->RangeMultiplier(2)->Range(1 << 10, 1 << 20);
 
 /** 
  * initialize google/benchmark main with custom code

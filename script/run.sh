@@ -64,8 +64,8 @@ test_leader_functionality() {
 }
 
 test_consistency_no_failure() {
-  CONFIG=5_node_cluster.ini
-  NUMBER=5
+  CONFIG=15_node_cluster.ini
+  NUMBER=15
 
   for i in {0..$((${NUMBER} - 1))}; do
     ones=$(($i % 10))
@@ -73,10 +73,10 @@ test_consistency_no_failure() {
     port_suffix="${tens}${ones}"
 
     if [[ $port_suffix == "00" ]]; then
-      # ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader &
+      # ./target/app --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} --flag.leader &
       ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} &
     else
-      ./target/app -g --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} &
+      ./target/app --config ${CONFIG} --port_consensus 80${port_suffix} --port_database 90${port_suffix} &
     fi
   done
 
@@ -90,7 +90,9 @@ test_consistency_no_failure() {
 test_benchmark() {
   # setup different cluster sizes
 
-  ./target/benchmark
+  FILE=15_node.csv
+  FOLDER=benchmark_set_leader
+  ./target/benchmark --benchmark_out=./results/${FOLDER}/${FILE} --benchmark_out_format=csv
 }
 
 #  (source ./script/run.sh && terminate_process)
