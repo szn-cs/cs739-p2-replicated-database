@@ -29,6 +29,7 @@ clean() {
 
 install_package() {
   VCPKG=./dependency/vcpkg
+  ./${VCPKG}/vcpkg install
   # ./${VCPKG}/vcpkg install ${package_name}
 
   ################################################
