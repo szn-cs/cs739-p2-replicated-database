@@ -5,7 +5,7 @@
 
 The logic of the code is divided into database & consensus portions. Each encompasses the algorithm implementations of the KV-Store and the consensus funcitons, respectively. In addition to the RPC functionality of the database endpoint exposed to the user and the consensus endpoint used to communicate amongst nodes.
 
-![architecture](./documentation/Design%20Architecture.v3.jpg)
+![architecture](./documentation/Design%20Architecture.v4.jpg)
 
 ## Code details:
 static member datastructures are instrantiated once and used to manage the node's state (similar to how  singleton pattern works).  

@@ -11,6 +11,7 @@ build() {
   mkdir -p ./target/
   # copy binaries
   cp ./target/config/app ./target/
+  cp ./target/config/benchmark ./target/
   # cp ./target/config/user ./target/
   cp ./config/*.ini ./target/
 
@@ -23,7 +24,7 @@ build_optimized() {
 
 # TODO: move to CMAKE
 test() {
-  gcc -Wall ./test/test.c -o ./target/test
+  gcc -Wall ./test/test.cc -o ./target/test
 }
 
 ## clean

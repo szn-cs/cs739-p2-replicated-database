@@ -87,6 +87,12 @@ test_consistency_no_failure() {
 
 }
 
+test_benchmark() {
+  # setup different cluster sizes
+
+  ./target/benchmark
+}
+
 #  (source ./script/run.sh && terminate_process)
 terminate_process() {
   # cleanup

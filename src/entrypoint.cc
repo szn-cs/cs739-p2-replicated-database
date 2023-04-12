@@ -316,7 +316,7 @@ int user_entrypoint(std::shared_ptr<utility::parse::Config> config, boost::progr
     }
 
   } else if (command == "benchmark") {
-    // TODO:
+    cout << red << "Benchmark must be run separately from ./test/benchmark.cc file" << reset << endl;
   }
 
   return 0;
