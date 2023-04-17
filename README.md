@@ -50,3 +50,7 @@ _to run funcitons in script files (without copy pasting): `$ (source ./script/<s
   - Jepsen consistency testing for distributed system (e.g. check linearizability)
   - <https://github.com/dgryski/awesome-consensus>
   - [example] <https://www.youtube.com/watch?v=odZ2znr7D1o>
+
+
+# Demonstration of consistency: 
+![demonstration](./documentation/demostration-consistency.gif)
